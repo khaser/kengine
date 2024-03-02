@@ -156,11 +156,14 @@ struct Box : public Geometry {
         Vec3<double> tmax = max(t1v, t2v);
         auto t1 = std::max({tmin.x, tmin.y, tmin.z});
         auto t2 = std::min({tmax.x, tmax.y, tmax.z});
-        if (t1 > t2) {
+        if (t1 > t2 || t2 < 0) {
             return {};
-        } else {
-            return std::min(t1, t2);
-        }
+        } else if (t1 > 0) {
+            return t1;
+        } else if (t2 > 0) {
+            return t2;
+        } else return {};
+
     };
 };
 
