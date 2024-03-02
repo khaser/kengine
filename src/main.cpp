@@ -6,6 +6,7 @@
 #include <memory>
 #include <optional>
 #include <cmath>
+#include <algorithm>
 #include <cassert>
 
 template<typename T>
@@ -23,11 +24,17 @@ struct Vec3 {
     T operator%(const Vec3<T>& oth) const { //dot-product
         return x * oth.x + y * oth.y + z * oth.z;
     }
+    Vec3<T> operator^(const Vec3<T>& oth) const { //cross-product
+        return {y * oth.y - z * oth.y, z * oth.x - x * oth.z, x * oth.y - y * oth.x};
+    }
     Vec3<T> operator+(const Vec3<T>& oth) const {
         return {x + oth.x, y + oth.y, z + oth.z};
     }
     Vec3<T> operator-(const Vec3<T>& oth) const {
         return {x - oth.x, y - oth.y, z - oth.z};
+    }
+    Vec3<T> operator-() const {
+        return {-x, -y, -z};
     }
     double len() const {
         return sqrt(x * x + y * y + z * z);
@@ -38,16 +45,43 @@ struct Vec3 {
 };
 
 template<typename T>
+Vec3<T> min(const Vec3<T> &a, const Vec3<T> &b) {
+    return { std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z) };
+}
+template<typename T>
+Vec3<T> max(const Vec3<T> &a, const Vec3<T> &b) {
+    return { std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z) };
+}
+
+template<typename T>
 std::istream& operator >> (std::istream &is, Vec3<T> &el) {
     return is >> el.x >> el.y >> el.z;
 }
+template<typename T>
+std::ostream& operator << (std::ostream &os, const Vec3<T> &el) {
+    return os << '(' << el.x << ' ' << el.y << ' ' << el.z << ')';
+}
 
 struct Quaternion {
-    float x, y, z, w;
+    Vec3<double> v = {0, 0, 0};
+    double w = 1;
+    Quaternion operator*(const Quaternion& oth) const {
+        return {v * oth.w + oth.v * w + (v ^ oth.v), w * oth.w - v % oth.v};
+    }
+    Quaternion operator-() const {
+        return {-v, w};
+    }
 };
 
+template<typename T>
+Vec3<T> operator*(const Quaternion &q, const Vec3<T> &v) {
+    Quaternion res = q * (Quaternion {v, 0}) * -q;
+    /* std::cerr << v << ' ' << res.v << ' ' << res.w << std::endl; */
+    return res.v;
+}
+
 std::istream& operator >> (std::istream &is, Quaternion &el) {
-    return is >> el.x >> el.y >> el.z >> el.w;
+    return is >> el.v >> el.w;
 }
 
 struct Ray {
@@ -111,14 +145,23 @@ struct Ellipsoid : public Geometry {
     };
 };
 
-/* struct Box : public Geometry { */
-/*     Vec3<double> size; */
-/*     Box(const Vec3<double> &v) : size(v) {} */
-/*     std::optional<double> get_intersect(const Ray& ray) { */
-/*         // TODO */
-/*         return true; */
-/*     }; */
-/* }; */
+struct Box : public Geometry {
+    Vec3<double> size;
+    Box(const Vec3<double> &v) : size(v) {}
+    std::optional<double> get_intersect(const Ray& ray) {
+        Vec3<double> t1v = (size - ray.start) / ray.v;
+        Vec3<double> t2v = (-size - ray.start) / ray.v;
+        Vec3<double> tmin = min(t1v, t2v);
+        Vec3<double> tmax = max(t1v, t2v);
+        auto t1 = std::max({tmin.x, tmin.y, tmin.z});
+        auto t2 = std::min({tmax.x, tmax.y, tmax.z});
+        if (t1 > t2) {
+            return {};
+        } else {
+            return std::min(t1, t2);
+        }
+    };
+};
 
 struct Primitive {
     std::unique_ptr<Geometry> geom;
@@ -127,8 +170,8 @@ struct Primitive {
     Vec3<double> color;
 
     std::optional<double> get_intersect(Ray ray) const {
-        ray.start = ray.start - position;
-        // TODO: apply rotation
+        ray.start = -rotation * (ray.start - position);
+        ray.v = -rotation * ray.v;
         std::optional<double> t = geom->get_intersect(ray);
         return t;
     }
@@ -196,11 +239,10 @@ struct Scene {
                 Vec3<double> norm;
                 is >> norm;
                 objs.back().geom = std::unique_ptr<Geometry>(new Ellipsoid(norm));
-            // TODO
-            /* } else if (token == "BOX") { */
-            /*     Vec3<double> norm; */
-            /*     is >> norm; */
-            /*     objs.back().geom = std::unique_ptr<Geometry>(new Box(norm)); */
+            } else if (token == "BOX") {
+                Vec3<double> norm;
+                is >> norm;
+                objs.back().geom = std::unique_ptr<Geometry>(new Box(norm));
             } else if (token == "NEW_PRIMITIVE") {
                 objs.emplace_back();
             } else {
