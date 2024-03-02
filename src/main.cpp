@@ -101,7 +101,8 @@ struct Camera {
     double fov_x;
     double fov_y;
     void calc_fov_y(int w, int h) {
-        fov_y = 2 * atan(h / (w * tan(fov_x/2)));
+        // w/h = tan(x/2)/tan(y/2)
+        fov_y = 2 * atan(h * tan(fov_x/2) / w);
     }
 
     // x, y in [-1, 1]
@@ -185,9 +186,9 @@ struct Image {
         assert(data.size() >= w * h);
         pixels.reserve(w * h * 3);
         for (auto pixel : data) {
-            pixels.emplace_back(255 * pixel.x);
-            pixels.emplace_back(255 * pixel.y);
-            pixels.emplace_back(255 * pixel.z);
+            pixels.emplace_back(round(255 * pixel.x));
+            pixels.emplace_back(round(255 * pixel.y));
+            pixels.emplace_back(round(255 * pixel.z));
         }
     };
 
@@ -247,6 +248,7 @@ struct Scene {
                 objs.emplace_back();
             } else {
                 std::cerr << "Unknown token: " << token << std::endl;
+                /* is.ignore(std::numeric_limits<std::streamsize>::max()); */
             }
         }
     }
