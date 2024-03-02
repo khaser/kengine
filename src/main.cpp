@@ -25,7 +25,7 @@ struct Vec3 {
         return x * oth.x + y * oth.y + z * oth.z;
     }
     Vec3<T> operator^(const Vec3<T>& oth) const { //cross-product
-        return {y * oth.y - z * oth.y, z * oth.x - x * oth.z, x * oth.y - y * oth.x};
+        return {y * oth.z - z * oth.y, z * oth.x - x * oth.z, x * oth.y - y * oth.x};
     }
     Vec3<T> operator+(const Vec3<T>& oth) const {
         return {x + oth.x, y + oth.y, z + oth.z};
@@ -98,8 +98,8 @@ struct Camera {
     Vec3<double> right;
     Vec3<double> up;
     Vec3<double> forward;
-    float fov_x;
-    float fov_y;
+    double fov_x;
+    double fov_y;
     void calc_fov_y(int w, int h) {
         fov_y = 2 * atan(h / (w * tan(fov_x/2)));
     }
