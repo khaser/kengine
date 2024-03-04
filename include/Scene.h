@@ -118,7 +118,6 @@ private:
 
     Vec3<double> gamma_correction(const Vec3<double> &x) {
         return saturate(pow(x, 1 / 2.2));
-        /* return x; */
     }
 
     Vec3<double> raycast(const Ray& ray, int ttl) const {
@@ -151,7 +150,7 @@ private:
                     Vec3<double> infiltrated_v = -ray.v * -ior + intersect.normal * (ior * cos_phi1 - cos_phi2);
                     Ray infiltrated = {pos, infiltrated_v.norm()};
                     infiltrated.start = infiltrated.start + infiltrated.v * 1e-5;
-                    double r0 = (1 - ior) / (ior + 1);
+                    double r0 = (!intersect.is_inside ? (1 - 1 / ior) / (1 / ior + 1) : (ior - 1) / (ior + 1));
                     r0 *= r0;
                     double reflectness = r0 + (1 - r0) * pow(1 - cos_phi1, 5);
                     return (raycast(reflected, ttl - 1) * reflectness + raycast(infiltrated, ttl - 1) * (1 - reflectness)) * obj.color;
