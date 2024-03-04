@@ -5,13 +5,13 @@ Box::Box(const Vec3<double> &v) : size(v) {}
 
 Vec3<double> Box::normal(const Vec3<double>& p) const {
     auto v = p / size;
-    v = {fabs(v.x), fabs(v.y), fabs(v.z)};
-    if (v.x > v.y && v.x > v.z) {
-        return {1, 0, 0};
-    } else if (v.y > v.x && v.y > v.z) {
-        return {0, 1, 0};
+    Vec3<double> av = {fabs(v.x), fabs(v.y), fabs(v.z)};
+    if (av.x > av.y && av.x > av.z) {
+        return {v.x, 0, 0};
+    } else if (av.y > av.x && av.y > av.z) {
+        return {0, v.y, 0};
     } else {
-        return {0, 0, 1};
+        return {0, 0, v.z};
     }
 }
 
