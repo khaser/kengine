@@ -1,13 +1,18 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <optional>
+#include <utility>
+#include <type_traits>
 
 #include "Vec3.h"
 #include "Camera.h"
 #include "Primitive.h"
 #include "Light.h"
+#include "Intersection.h"
 
 struct Scene {
     std::pair<uint16_t, uint16_t> dimensions;
@@ -94,16 +99,68 @@ private:
     // x, y in [-1, 1]
     Vec3<double> render_pixel(double x, double y) {
         Ray ray = camera.raycast(x, y);
-        std::pair<Vec3<double>, double> bound = {bg_color, 1e9};
+        auto res = aces_tonemap(raycast(ray));
+        return saturate(res);
+    }
 
+    Vec3<double> saturate(const Vec3<double> &color) {
+        return color.clamp(Vec3<double>(0), Vec3<double>(1));
+    }
+
+    Vec3<double> aces_tonemap(const Vec3<double> &x) {
+        const double a = 2.51;
+        const double b = 0.03;
+        const double c = 2.43;
+        const double d = 0.59;
+        const double e = 0.14;
+        return (x*(x*a+b))/(x*(x*c+d)+e);
+    }
+
+    Vec3<double> raycast(const Ray& ray) const {
+        auto tmp = get_intersect(ray);
+        if (tmp) {
+            auto& [obj, intersect] = tmp.value();
+            if (obj.material == DIFFUSE) {
+                return get_illumination(ray.reveal(intersect.t), intersect.normal) * obj.color;
+            }
+            return (intersect.normal + Vec3<double>{1, 1, 1}) * 0.5;
+        } else {
+            return bg_color;
+        }
+    }
+
+    Vec3<double> get_illumination(const Vec3<double>& p, const Vec3<double>& normal) const {
+        Vec3<double> illumination = ambient_light;
+        for (auto& light : lights) {
+            double visibility = 0;
+            if (dynamic_cast<PointLight*>(light.get()) != nullptr) {
+                auto plight = dynamic_cast<PointLight*>(light.get());
+                auto v = plight->position - p;
+                Ray ray = {p + v * 1e-5, v.norm()};
+                auto inter = get_intersect(ray);
+                if (!inter || inter.value().second.t > v.len()) {
+                    visibility = std::max(0.0, ray.v % normal);
+                }
+            } else if (dynamic_cast<DirectLight*>(light.get()) != nullptr) {
+                auto dlight = dynamic_cast<DirectLight*>(light.get());
+                if (!get_intersect(Ray{p + dlight->direction * 1e-5, dlight->direction})) {
+                    visibility = std::max(0.0, dlight->direction % normal);
+                }
+            }
+            illumination = illumination + light->get_irradiance(p) * visibility;
+        }
+        /* std::cerr << illumination << std::endl; */
+        return illumination;
+    }
+
+    std::optional<std::pair<Primitive, Intersection>> get_intersect(const Ray& ray) const {
+        std::optional<std::pair<Primitive, Intersection>> bound;
         for (auto& obj : objs) {
             std::optional<Intersection> t = obj.get_intersect(ray);
-            if (t.has_value() && bound.second > t.value().t) {
-                bound = {obj.color, t.value().t};
-                /* bound = {t.value().normal, t.value().t}; */
+            if (t.has_value() && (!bound || bound.value().second.t > t.value().t)) {
+                bound = {{obj, t.value()}};
             }
         }
-
-        return bound.first;
+        return bound;
     }
 };

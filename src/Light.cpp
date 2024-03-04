@@ -23,7 +23,7 @@ std::unique_ptr<Light> Light::from_istream(std::istream& is) {
         } else if (token == "LIGHT_DIRECTION") {
             Vec3<double> dir;
             is >> dir;
-            direction = dir;
+            direction = dir.norm();
         } else if (token == "LIGHT_POSITION") {
             Vec3<double> pos;
             is >> pos;

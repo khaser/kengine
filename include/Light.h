@@ -12,7 +12,7 @@ struct Light {
 
     static std::unique_ptr<Light> from_istream(std::istream&);
 
-    virtual double get_irradiance(const Vec3<double>&) = 0;
+    virtual Vec3<double> get_irradiance(const Vec3<double>&) = 0;
 };
 
 struct PointLight : public Light {
@@ -24,7 +24,7 @@ struct PointLight : public Light {
             this->intensity = intensity;
         }
 
-    double get_irradiance(const Vec3<double>&);
+    Vec3<double> get_irradiance(const Vec3<double>&);
 };
 
 struct DirectLight : public Light {
@@ -34,5 +34,5 @@ struct DirectLight : public Light {
         this->intensity = intensity;
     };
 
-    double get_irradiance(const Vec3<double>&);
+    Vec3<double> get_irradiance(const Vec3<double>&);
 };

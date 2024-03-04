@@ -1,12 +1,22 @@
 #pragma once
 
 #include <fstream>
+#include <cmath>
+#include <algorithm>
 
 template<typename T>
 struct Vec3 {
     T x, y, z;
+
+    Vec3() : x(0), y(0), z(0) {}
+    Vec3(const T& k) : x(k), y(k), z(k) {}
+    Vec3(const T& x, const T& y, const T& z) : x(x), y(y), z(z) { }
+
     Vec3<T> operator*(const T& k) const {
         return {x * k, y * k, z * k};
+    }
+    Vec3<T> operator+(const T& k) const {
+        return {x + k, y + k, z + k};
     }
     Vec3<T> operator*(const Vec3<T>& k) const {
         return {x * k.x, y * k.y, z * k.z};
@@ -33,7 +43,11 @@ struct Vec3 {
         return sqrt(x * x + y * y + z * z);
     }
     Vec3<T> norm() const {
-        return operator*(1.0 / len());
+        return (*this) * (1.0 / len());
+    }
+
+    Vec3<T> clamp(const Vec3<T> &Min, const Vec3<T> &Max) const {
+        return { std::clamp(x, Min.x, Max.x), std::clamp(y, Min.y, Max.y), std::clamp(z, Min.z, Max.z) };
     }
 };
 

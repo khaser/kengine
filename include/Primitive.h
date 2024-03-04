@@ -15,7 +15,7 @@ enum Material {
 };
 
 struct Primitive {
-    std::unique_ptr<Geometry> geom;
+    std::shared_ptr<Geometry> geom;
 
     // TODO: refactor into Material class
     Material material = DIFFUSE;
@@ -28,12 +28,17 @@ struct Primitive {
     std::optional<Intersection> get_intersect(Ray ray) const {
         ray.start = -rotation * (ray.start - position);
         ray.v = -rotation * ray.v;
-        return geom->get_intersect(ray);
-        /* if (t) { */
-        /*     return std::optional<Intersection>(Intersection{t.value(), {0, 0, 0}, false}); */
-        /* } else { */
-        /*     return {}; */
-        /* } */
+        auto intersect = geom->get_intersect(ray);
+        if (intersect) {
+            auto [t, normal, is_inside] = intersect.value();
+            if (is_inside) {
+                normal = -normal;
+            }
+            normal = (rotation * normal).norm();
+            return {{t, normal, is_inside}};
+        } else {
+            return std::nullopt;
+        }
     }
 };
 
