@@ -99,7 +99,7 @@ private:
     // x, y in [-1, 1]
     Vec3<double> render_pixel(double x, double y) {
         Ray ray = camera.raycast(x, y);
-        auto res = aces_tonemap(raycast(ray));
+        auto res = aces_tonemap(raycast(ray, ray_depth));
         return saturate(res);
     }
 
@@ -116,7 +116,10 @@ private:
         return (x*(x*a+b))/(x*(x*c+d)+e);
     }
 
-    Vec3<double> raycast(const Ray& ray) const {
+    Vec3<double> raycast(const Ray& ray, int ttl) const {
+        if (ttl == 0) {
+            return {};
+        }
         auto tmp = get_intersect(ray);
         if (tmp) {
             auto& [obj, intersect] = tmp.value();
@@ -124,14 +127,43 @@ private:
             if (obj.material == DIFFUSE) {
                 return get_illumination(pos, intersect.normal) * obj.color;
             } else if (obj.material == METALLIC) {
-                Ray reflected = {pos, ray.v - intersect.normal * 2 * (intersect.normal % ray.v)};
-                reflected.start = reflected.start + reflected.v * 1e-5;
-                return obj.color * raycast(reflected);
+                Ray reflected = reflect(pos, ray.v, intersect.normal);
+                return obj.color * raycast(reflected, ttl - 1);
+            } else if (obj.material == DIELECTRIC) {
+                Ray reflected = reflect(pos, ray.v, intersect.normal);
+                double ior = obj.ior;
+                if (intersect.is_inside) {
+                    ior = 1 / ior;
+                }
+                double cos_phi1 = intersect.normal % -ray.v;
+                double sin_phi2 = ior * sqrt(1 - cos_phi1 * cos_phi1);
+                if (sin_phi2 > 1) {
+                    // zero infiltrate case
+                    return raycast(reflected, ttl - 1) * obj.color;
+                } else {
+                    double cos_phi2 = sqrt(1 - sin_phi2 * sin_phi2);
+                    Vec3<double> infiltrated_v = -ray.v * -ior + intersect.normal * (ior * cos_phi1 - cos_phi2);
+                    Ray infiltrated = {pos, infiltrated_v.norm()};
+                    infiltrated.start = infiltrated.start + infiltrated.v * 1e-5;
+                    double r0 = (1 - ior) / (ior + 1);
+                    r0 *= r0;
+                    double reflectness = r0 + (1 - r0) * pow(1 - cos_phi1, 5);
+                    return (raycast(reflected, ttl - 1) * reflectness + raycast(infiltrated, ttl - 1) * (1 - reflectness)) * obj.color;
+                }
             }
-            return (intersect.normal + Vec3<double>{1, 1, 1}) * 0.5;
+            std::cerr << "Undefined material, black color used" << std::endl;
+            /* return (intersect.normal + Vec3<double>{1, 1, 1}) * 0.5; */
+            return {};
         } else {
             return bg_color;
         }
+    }
+
+    // TODO: move out
+    Ray reflect(const Vec3<double> pos, const Vec3<double> d, const Vec3<double> normal) const {
+        Ray reflected = {pos, d - normal * 2 * (normal % d)};
+        reflected.start = reflected.start + reflected.v * 1e-5;
+        return reflected;
     }
 
     Vec3<double> get_illumination(const Vec3<double>& p, const Vec3<double>& normal) const {
