@@ -69,3 +69,7 @@ std::ostream& operator << (std::ostream &os, const Vec3<T> &el) {
     return os << '(' << el.x << ' ' << el.y << ' ' << el.z << ')';
 }
 
+template<typename T>
+Vec3<T> pow(const Vec3<T> &v, double p) {
+    return { std::pow(v.x, p), std::pow(v.y, p), std::pow(v.z, p) };
+}

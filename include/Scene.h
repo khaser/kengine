@@ -100,7 +100,7 @@ private:
     Vec3<double> render_pixel(double x, double y) {
         Ray ray = camera.raycast(x, y);
         auto res = aces_tonemap(raycast(ray, ray_depth));
-        return saturate(res);
+        return gamma_correction(res);
     }
 
     Vec3<double> saturate(const Vec3<double> &color) {
@@ -116,9 +116,15 @@ private:
         return (x*(x*a+b))/(x*(x*c+d)+e);
     }
 
+    Vec3<double> gamma_correction(const Vec3<double> &x) {
+        return saturate(pow(x, 1 / 2.2));
+        /* return x; */
+    }
+
     Vec3<double> raycast(const Ray& ray, int ttl) const {
         if (ttl == 0) {
-            return {};
+            /* return {}; */
+            return bg_color;
         }
         auto tmp = get_intersect(ray);
         if (tmp) {
@@ -132,7 +138,7 @@ private:
             } else if (obj.material == DIELECTRIC) {
                 Ray reflected = reflect(pos, ray.v, intersect.normal);
                 double ior = obj.ior;
-                if (intersect.is_inside) {
+                if (!intersect.is_inside) {
                     ior = 1 / ior;
                 }
                 double cos_phi1 = intersect.normal % -ray.v;
