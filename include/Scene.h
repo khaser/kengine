@@ -120,8 +120,13 @@ private:
         auto tmp = get_intersect(ray);
         if (tmp) {
             auto& [obj, intersect] = tmp.value();
+            Vec3<double> pos = ray.reveal(intersect.t);
             if (obj.material == DIFFUSE) {
-                return get_illumination(ray.reveal(intersect.t), intersect.normal) * obj.color;
+                return get_illumination(pos, intersect.normal) * obj.color;
+            } else if (obj.material == METALLIC) {
+                Ray reflected = {pos, ray.v - intersect.normal * 2 * (intersect.normal % ray.v)};
+                reflected.start = reflected.start + reflected.v * 1e-5;
+                return obj.color * raycast(reflected);
             }
             return (intersect.normal + Vec3<double>{1, 1, 1}) * 0.5;
         } else {
