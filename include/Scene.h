@@ -140,20 +140,24 @@ private:
                 if (!intersect.is_inside) {
                     ior = 1 / ior;
                 }
+                // ior is n1 / n2
                 double cos_phi1 = intersect.normal % -ray.v;
                 double sin_phi2 = ior * sqrt(1 - cos_phi1 * cos_phi1);
                 if (sin_phi2 > 1) {
                     // zero infiltrate case
-                    return raycast(reflected, ttl - 1) * obj.color;
+                    return raycast(reflected, ttl - 1);
                 } else {
                     double cos_phi2 = sqrt(1 - sin_phi2 * sin_phi2);
-                    Vec3<double> infiltrated_v = -ray.v * -ior + intersect.normal * (ior * cos_phi1 - cos_phi2);
+                    Vec3<double> infiltrated_v = ray.v * ior + intersect.normal * (ior * cos_phi1 - cos_phi2);
                     Ray infiltrated = {pos, infiltrated_v.norm()};
                     infiltrated.start = infiltrated.start + infiltrated.v * 1e-5;
                     double r0 = (!intersect.is_inside ? (1 - 1 / ior) / (1 / ior + 1) : (ior - 1) / (ior + 1));
+                    /* double r0 = 1; */
                     r0 *= r0;
                     double reflectness = r0 + (1 - r0) * pow(1 - cos_phi1, 5);
-                    return (raycast(reflected, ttl - 1) * reflectness + raycast(infiltrated, ttl - 1) * (1 - reflectness)) * obj.color;
+                    Vec3<double> res = raycast(reflected, ttl - 1) * reflectness;
+                    res = res + raycast(infiltrated, ttl - 1) * (1 - reflectness) * (!intersect.is_inside ? obj.color : 1);
+                    return res;
                 }
             }
             std::cerr << "Undefined material, black color used" << std::endl;
