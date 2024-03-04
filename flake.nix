@@ -26,7 +26,7 @@
 
           autocmd filetype cpp map <silent> <F1> :!./build.sh <CR>
           autocmd filetype cpp map <silent> <F2> :!./run.sh ./scenes/example.cmds ./artifacts/example.p6 <CR>
-          let &path.="src,${pkgs.glibc.dev}/include"
+          let &path.="include,src,${pkgs.glibc.dev}/include"
           let g:ycm_clangd_binary_path = '${pkgs.clang-tools}/bin/clangd'
         '';
       });

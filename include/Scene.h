@@ -50,13 +50,13 @@ struct Scene {
                 is >> norm;
                 objs.back().geom = std::unique_ptr<Geometry>(new Plane(norm));
             } else if (token == "ELLIPSOID") {
-                Vec3<double> norm;
-                is >> norm;
-                objs.back().geom = std::unique_ptr<Geometry>(new Ellipsoid(norm));
+                Vec3<double> r;
+                is >> r;
+                objs.back().geom = std::unique_ptr<Geometry>(new Ellipsoid(r));
             } else if (token == "BOX") {
-                Vec3<double> norm;
-                is >> norm;
-                objs.back().geom = std::unique_ptr<Geometry>(new Box(norm));
+                Vec3<double> size;
+                is >> size;
+                objs.back().geom = std::unique_ptr<Geometry>(new Box(size));
             } else if (token == "NEW_PRIMITIVE") {
                 objs.emplace_back();
             } else if (token == "RAY_DEPTH") {
@@ -97,9 +97,10 @@ private:
         std::pair<Vec3<double>, double> bound = {bg_color, 1e9};
 
         for (auto& obj : objs) {
-            auto t = obj.get_intersect(ray);
-            if (t && bound.second > *t) {
-                bound = {obj.color, *t};
+            std::optional<Intersection> t = obj.get_intersect(ray);
+            if (t.has_value() && bound.second > t.value().t) {
+                bound = {obj.color, t.value().t};
+                /* bound = {t.value().normal, t.value().t}; */
             }
         }
 

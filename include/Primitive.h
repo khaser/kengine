@@ -5,6 +5,7 @@
 
 #include "Geometry.h"
 #include "Quaternion.h"
+#include "Intersection.h"
 #include "Vec3.h"
 
 enum Material {
@@ -24,11 +25,15 @@ struct Primitive {
     Vec3<double> position;
     Vec3<double> color;
 
-    std::optional<double> get_intersect(Ray ray) const {
+    std::optional<Intersection> get_intersect(Ray ray) const {
         ray.start = -rotation * (ray.start - position);
         ray.v = -rotation * ray.v;
-        std::optional<double> t = geom->get_intersect(ray);
-        return t;
+        return geom->get_intersect(ray);
+        /* if (t) { */
+        /*     return std::optional<Intersection>(Intersection{t.value(), {0, 0, 0}, false}); */
+        /* } else { */
+        /*     return {}; */
+        /* } */
     }
 };
 
