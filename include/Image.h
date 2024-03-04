@@ -12,13 +12,14 @@ struct Image {
     uint16_t width, height;
     std::vector<uint8_t> pixels;
 
-    Image(int w, int h, const std::vector<Vec3<double>> &data) : width(w), height(h) {
-        assert(data.size() >= w * h);
-        pixels.reserve(w * h * 3);
-        for (auto pixel : data) {
-            pixels.emplace_back(round(255 * pixel.x));
-            pixels.emplace_back(round(255 * pixel.y));
-            pixels.emplace_back(round(255 * pixel.z));
+    Image(const std::vector<std::vector<Vec3<double>>> &img) : height(img.size()), width(img[0].size()) {
+        pixels.reserve(width * height * 3);
+        for (auto &row : img) {
+            for (auto &pixel : row) {
+                pixels.emplace_back(round(255 * pixel.x));
+                pixels.emplace_back(round(255 * pixel.y));
+                pixels.emplace_back(round(255 * pixel.z));
+            }
         }
     };
 

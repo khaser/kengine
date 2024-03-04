@@ -4,7 +4,6 @@
 #include <fstream>
 #include <vector>
 
-#include "Image.h"
 #include "Vec3.h"
 #include "Camera.h"
 #include "Primitive.h"
@@ -15,6 +14,7 @@ struct Scene {
     Vec3<double> bg_color;
     Camera camera;
     std::vector<Primitive> objs;
+    std::vector<std::unique_ptr<Light>> lights;
 
     int ray_depth;
     Vec3<double> ambient_light;
@@ -59,6 +59,18 @@ struct Scene {
                 objs.back().geom = std::unique_ptr<Geometry>(new Box(norm));
             } else if (token == "NEW_PRIMITIVE") {
                 objs.emplace_back();
+            } else if (token == "RAY_DEPTH") {
+                is >> ray_depth;
+            } else if (token == "AMBIENT_LIGHT") {
+                is >> ambient_light;
+            } else if (token == "NEW_LIGHT") {
+                lights.emplace_back(Light::from_istream(is));
+            } else if (token == "METALLIC") {
+                objs.back().material = METALLIC;
+            } else if (token == "DIELECTRIC") {
+                objs.back().material = DIELECTRIC;
+            } else if (token == "IOR") {
+                is >> objs.back().ior;
             } else {
                 std::cerr << "Unknown token: " << token << std::endl;
                 /* is.ignore(std::numeric_limits<std::streamsize>::max()); */
@@ -66,16 +78,16 @@ struct Scene {
         }
     }
 
-    Image render_scene() {
-        std::vector<Vec3<double>> output(dimensions.first * dimensions.second * 3);
+    std::vector<std::vector<Vec3<double>>> render_scene() {
+        std::vector<std::vector<Vec3<double>>> output(dimensions.second, std::vector<Vec3<double>>(dimensions.first));
         for (uint16_t x = 0; x < dimensions.first; ++x) {
             for (uint16_t y = 0; y < dimensions.second; ++y) {
                 double x_01 = (x + 0.5) / dimensions.first;
                 double y_01 = (y + 0.5) / dimensions.second;
-                output[y * dimensions.first + x] = render_pixel(x_01 * 2 - 1, -(y_01 * 2 - 1));
+                output[y][x] = render_pixel(x_01 * 2 - 1, -(y_01 * 2 - 1));
             }
         }
-        return Image(dimensions.first, dimensions.second, output);
+        return output;
     }
 
 private:

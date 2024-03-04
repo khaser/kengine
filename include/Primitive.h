@@ -7,8 +7,19 @@
 #include "Quaternion.h"
 #include "Vec3.h"
 
+enum Material {
+    DIFFUSE = 0,
+    METALLIC = 1,
+    DIELECTRIC = 2
+};
+
 struct Primitive {
     std::unique_ptr<Geometry> geom;
+
+    // TODO: refactor into Material class
+    Material material = DIFFUSE;
+    double ior;
+
     Quaternion rotation;
     Vec3<double> position;
     Vec3<double> color;
