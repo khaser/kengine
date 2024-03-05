@@ -61,11 +61,11 @@ Vec3<T> max(const Vec3<T> &a, const Vec3<T> &b) {
 }
 
 template<typename T>
-std::istream& operator >> (std::istream &is, Vec3<T> &el) {
+std::istream& operator>>(std::istream &is, Vec3<T> &el) {
     return is >> el.x >> el.y >> el.z;
 }
 template<typename T>
-std::ostream& operator << (std::ostream &os, const Vec3<T> &el) {
+std::ostream& operator<<(std::ostream &os, const Vec3<T> &el) {
     return os << '(' << el.x << ' ' << el.y << ' ' << el.z << ')';
 }
 

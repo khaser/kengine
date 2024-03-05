@@ -9,5 +9,9 @@ struct Ray {
     Vec3<double> reveal(double t) const {
         return start + v * t;
     }
+
+    void bump() {
+        start = start + v * 1e-5;
+    }
 };
 

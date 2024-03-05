@@ -122,8 +122,7 @@ private:
 
     Vec3<double> raycast(const Ray& ray, int ttl) const {
         if (ttl == 0) {
-            /* return {}; */
-            return bg_color;
+            return {};
         }
         auto tmp = get_intersect(ray);
         if (tmp) {
@@ -150,9 +149,8 @@ private:
                     double cos_phi2 = sqrt(1 - sin_phi2 * sin_phi2);
                     Vec3<double> infiltrated_v = ray.v * ior + intersect.normal * (ior * cos_phi1 - cos_phi2);
                     Ray infiltrated = {pos, infiltrated_v.norm()};
-                    infiltrated.start = infiltrated.start + infiltrated.v * 1e-5;
+                    infiltrated.bump();
                     double r0 = (!intersect.is_inside ? (1 - 1 / ior) / (1 / ior + 1) : (ior - 1) / (ior + 1));
-                    /* double r0 = 1; */
                     r0 *= r0;
                     double reflectness = r0 + (1 - r0) * pow(1 - cos_phi1, 5);
                     Vec3<double> res = raycast(reflected, ttl - 1) * reflectness;
@@ -168,10 +166,9 @@ private:
         }
     }
 
-    // TODO: move out
     Ray reflect(const Vec3<double> pos, const Vec3<double> d, const Vec3<double> normal) const {
         Ray reflected = {pos, d - normal * 2 * (normal % d)};
-        reflected.start = reflected.start + reflected.v * 1e-5;
+        reflected.bump();
         return reflected;
     }
 
@@ -182,14 +179,17 @@ private:
             if (dynamic_cast<PointLight*>(light.get()) != nullptr) {
                 auto plight = dynamic_cast<PointLight*>(light.get());
                 auto v = plight->position - p;
-                Ray ray = {p + v * 1e-5, v.norm()};
+                Ray ray = {p, v.norm()};
+                ray.bump();
                 auto inter = get_intersect(ray);
                 if (!inter || inter.value().second.t > v.len()) {
                     visibility = std::max(0.0, ray.v % normal);
                 }
             } else if (dynamic_cast<DirectLight*>(light.get()) != nullptr) {
                 auto dlight = dynamic_cast<DirectLight*>(light.get());
-                if (!get_intersect(Ray{p + dlight->direction * 1e-5, dlight->direction})) {
+                Ray ray = Ray{p, dlight->direction};
+                ray.bump();
+                if (!get_intersect(ray)) {
                     visibility = std::max(0.0, dlight->direction % normal);
                 }
             }
