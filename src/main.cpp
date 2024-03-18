@@ -5,7 +5,7 @@
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
-        std::cout << "Usage: kengine <path to scene> <path for output p6 image>";
+        std::cout << "Usage: kengine <path to scene> <path for output p6 image>\n";
         return 1;
     }
     std::string scene_path(argv[1]);
