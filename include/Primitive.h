@@ -50,10 +50,12 @@ struct Dielectric : public Material {
     double ior;
     Vec3<double> sample(Ray w_in, Intersection i,
                             const std::function<Vec3<double>(const Ray&)> &raycast) {
+        double k = (i.is_inside ? ior : 1 / ior);
+
         Vec3<double> pos = w_in.reveal(i.t);
 
         double cos_phi1 = i.normal % -w_in.v;
-        double sin_phi2 = ior * sqrt(1 - cos_phi1 * cos_phi1);
+        double sin_phi2 = k * sqrt(1 - cos_phi1 * cos_phi1);
         if (sin_phi2 > 1) {
             // zero refract case
             Ray reflected = reflect(pos, w_in.v, i.normal);
@@ -65,7 +67,7 @@ struct Dielectric : public Material {
 
             if (rnd_val > get_reflectness(cos_phi1, i.is_inside)) {
                 // refraction case
-                Ray refracted = {pos, (w_in.v * ior + i.normal * (ior * cos_phi1 - cos_phi2)).norm()};
+                Ray refracted = {pos, (w_in.v * k + i.normal * (k * cos_phi1 - cos_phi2)).norm()};
                 refracted.bump();
                 return color * raycast(refracted);
             } else {
@@ -80,10 +82,7 @@ struct Dielectric : public Material {
 
 private:
     double get_reflectness(double cos_phi1, bool is_inside) {
-        if (!is_inside) {
-            ior = 1 / ior;
-        }
-        double r0 = (!is_inside ? (1 - 1 / ior) / (1 / ior + 1) : (ior - 1) / (ior + 1));
+        double r0 = (ior - 1) / (ior + 1);
         r0 *= r0;
         return r0 + (1 - r0) * pow(1 - cos_phi1, 5);
     }
