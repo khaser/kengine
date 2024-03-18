@@ -20,6 +20,7 @@ static Ray reflect(const Vec3<double> pos, const Vec3<double> d, const Vec3<doub
 
 struct Material {
     Vec3<double> color;
+    virtual ~Material() {};
     virtual Vec3<double> sample(Ray w_in, Intersection i,
                                     const std::function<Vec3<double>(const Ray&)> &raycast) = 0;
 };
@@ -28,11 +29,11 @@ struct Diffuse : public Material {
     Vec3<double> emission;
     Vec3<double> sample(Ray w_in, Intersection i,
                             const std::function<Vec3<double>(const Ray&)> &raycast) {
-        // random generated bounced ray
-        // TODO: raycast several times
         Vec3<double> pos = w_in.reveal(i.t);
         Vec3<double> w_out = Rnd::getRnd()->in_hemisphere(i.normal);
-        return emission + color * 2 * raycast(Ray {pos, w_out}) * (i.normal % w_out);
+        Ray r_out = Ray {pos, w_out};
+        r_out.bump();
+        return emission + color * 2 * raycast(r_out) * (i.normal % w_out);
     }
 };
 
@@ -56,6 +57,7 @@ struct Dielectric : public Material {
         if (sin_phi2 > 1) {
             // zero refract case
             Ray reflected = reflect(pos, w_in.v, i.normal);
+            reflected.bump();
             return raycast(reflected);
         } else {
             double cos_phi2 = sqrt(1 - sin_phi2 * sin_phi2);
@@ -68,7 +70,9 @@ struct Dielectric : public Material {
                 return color * raycast(refracted);
             } else {
                 // reflection case
-                return raycast(reflect(pos, w_in.v, i.normal));
+                Ray reflected = reflect(pos, w_in.v, i.normal);
+                reflected.bump();
+                return raycast(reflected);
             }
         }
 

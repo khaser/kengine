@@ -24,7 +24,7 @@ struct Scene {
     std::vector<Object> objs;
 
     int ray_depth;
-    int samples;
+    uint16_t samples;
 
     Scene(std::ifstream is) {
         std::string token;
@@ -50,32 +50,35 @@ struct Scene {
             } else if (token == "CAMERA_FOV_X") {
                 is >> camera.fov_x;
                 camera.calc_fov_y(dimensions.first, dimensions.second);
-            } else if (token == "NEW_PRIMITIVE") {
-                objs.emplace_back();
             } else if (token == "POSITION") {
                 is >> objs.back().geometry->position;
             } else if (token == "ROTATION") {
                 is >> objs.back().geometry->rotation;
             } else if (token == "COLOR") {
                 is >> objs.back().material->color;
+            } else if (token == "NEW_PRIMITIVE") {
+                objs.emplace_back();
+                objs.back().material = std::make_unique<Diffuse>();
             } else if (token == "PLANE") {
                 Vec3<double> norm;
                 is >> norm;
-                objs.back().geometry = std::unique_ptr<Geometry>(new Plane(norm));
+                objs.back().geometry = std::make_unique<Plane>(norm);
             } else if (token == "ELLIPSOID") {
                 Vec3<double> r;
                 is >> r;
-                objs.back().geometry = std::unique_ptr<Geometry>(new Ellipsoid(r));
+                objs.back().geometry = std::make_unique<Ellipsoid>(r);
             } else if (token == "BOX") {
                 Vec3<double> size;
                 is >> size;
-                objs.back().geometry = std::unique_ptr<Geometry>(new Box(size));
-            } else if (token == "NEW_PRIMITIVE") {
-                objs.emplace_back();
+                objs.back().geometry = std::make_unique<Box>(size);
             } else if (token == "METALLIC") {
-                objs.back().material = std::unique_ptr<Material>(new Metallic());
+                auto color = objs.back().material->color;
+                objs.back().material = std::make_unique<Metallic>();
+                objs.back().material->color = color;
             } else if (token == "DIELECTRIC") {
-                objs.back().material = std::unique_ptr<Material>(new Dielectric());
+                auto color = objs.back().material->color;
+                objs.back().material = std::make_unique<Dielectric>();
+                objs.back().material->color = color;
             } else if (token == "IOR") {
                 double ior;
                 is >> ior;
@@ -95,10 +98,15 @@ struct Scene {
         std::vector<std::vector<Vec3<double>>> output(dimensions.second, std::vector<Vec3<double>>(dimensions.first));
         for (uint16_t x = 0; x < dimensions.first; ++x) {
             for (uint16_t y = 0; y < dimensions.second; ++y) {
-                double x_01 = (x + 0.5) / dimensions.first;
-                double y_01 = (y + 0.5) / dimensions.second;
-                // TODO render pixel several times due to Monte-Carlo sampling
-                output[y][x] = render_pixel(x_01 * 2 - 1, -(y_01 * 2 - 1));
+                Vec3<double> pixel;
+                for (uint16_t sample = 0; sample < samples; ++sample) {
+                    double x_01 = (x + Rnd::getRnd()->uniform(0, 1)) / dimensions.first;
+                    double y_01 = (y + Rnd::getRnd()->uniform(0, 1)) / dimensions.second;
+                    double x_11 = x_01 * 2 - 1;
+                    double y_11 = y_01 * 2 - 1;
+                    pixel = pixel + raycast(camera.raycast(x_11, -y_11), ray_depth) / samples;
+                }
+                output[y][x] = postprocess(pixel);
             }
         }
         return output;
@@ -106,14 +114,8 @@ struct Scene {
 
 private:
     // x, y in [-1, 1]
-    Vec3<double> render_pixel(double x, double y) {
-        Ray ray = camera.raycast(x, y);
-        auto res = aces_tonemap(raycast(ray, ray_depth));
-        return gamma_correction(res);
-    }
-
-    Vec3<double> saturate(const Vec3<double> &color) {
-        return color.clamp(Vec3<double>(0), Vec3<double>(1));
+    Vec3<double> postprocess(Vec3<double> in_color) {
+        return gamma_correction(aces_tonemap(in_color));
     }
 
     Vec3<double> aces_tonemap(const Vec3<double> &x) {
@@ -129,18 +131,19 @@ private:
         return saturate(pow(x, 1 / 2.2));
     }
 
+    Vec3<double> saturate(const Vec3<double> &color) {
+        return color.clamp(Vec3<double>(0), Vec3<double>(1));
+    }
+
     Vec3<double> raycast(const Ray& ray, int ttl) const {
         if (ttl == 0) {
-            return {};
+            return bg_color;
         }
         auto tmp = get_intersect(ray);
         if (tmp) {
             auto& [obj, intersect] = tmp.value();
             auto raycast_fn = std::bind(&Scene::raycast, this, _1, ttl - 1);
-            obj.material->sample(ray, intersect, raycast_fn);
-            std::cerr << "Undefined material, black color used" << std::endl;
-            /* return (intersect.normal + Vec3<double>{1, 1, 1}) * 0.5; */
-            return {};
+            return obj.material->sample(ray, intersect, raycast_fn);
         } else {
             return bg_color;
         }
