@@ -19,6 +19,4 @@ Vec3<T> operator*(const Quaternion &q, const Vec3<T> &v) {
     return res.v;
 }
 
-std::istream& operator>>(std::istream &is, Quaternion &el) {
-    return is >> el.v >> el.w;
-}
+std::istream& operator>>(std::istream &, Quaternion &);

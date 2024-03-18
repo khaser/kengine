@@ -24,10 +24,10 @@ struct Vec3 {
     Vec3<T> operator/(const Vec3<T>& k) const {
         return {x / k.x, y / k.y, z / k.z};
     }
-    T operator%(const Vec3<T>& oth) const { //dot-product
+    T operator%(const Vec3<T>& oth) const { // dot-product
         return x * oth.x + y * oth.y + z * oth.z;
     }
-    Vec3<T> operator^(const Vec3<T>& oth) const { //cross-product
+    Vec3<T> operator^(const Vec3<T>& oth) const { // cross-product
         return {y * oth.z - z * oth.y, z * oth.x - x * oth.z, x * oth.y - y * oth.x};
     }
     Vec3<T> operator+(const Vec3<T>& oth) const {

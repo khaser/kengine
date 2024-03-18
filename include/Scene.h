@@ -11,18 +11,20 @@
 #include "Vec3.h"
 #include "Camera.h"
 #include "Primitive.h"
-#include "Light.h"
 #include "Intersection.h"
+#include "Quaternion.h"
+
+using namespace std::placeholders;
 
 struct Scene {
     std::pair<uint16_t, uint16_t> dimensions;
     Vec3<double> bg_color;
+    Vec3<double> ambient_light;
     Camera camera;
-    std::vector<Primitive> objs;
-    std::vector<std::unique_ptr<Light>> lights;
+    std::vector<Object> objs;
 
     int ray_depth;
-    Vec3<double> ambient_light;
+    int samples;
 
     Scene(std::ifstream is) {
         std::string token;
@@ -31,6 +33,12 @@ struct Scene {
                 is >> dimensions.first >> dimensions.second;
             } else if (token == "BG_COLOR") {
                 is >> bg_color;
+            } else if (token == "RAY_DEPTH") {
+                is >> ray_depth;
+            } else if (token == "SAMPLES") {
+                is >> samples;
+            } else if (token == "AMBIENT_LIGHT") {
+                is >> ambient_light;
             } else if (token == "CAMERA_POSITION") {
                 is >> camera.position;
             } else if (token == "CAMERA_RIGHT") {
@@ -45,37 +53,37 @@ struct Scene {
             } else if (token == "NEW_PRIMITIVE") {
                 objs.emplace_back();
             } else if (token == "POSITION") {
-                is >> objs.back().position;
+                is >> objs.back().geometry->position;
             } else if (token == "ROTATION") {
-                is >> objs.back().rotation;
+                is >> objs.back().geometry->rotation;
             } else if (token == "COLOR") {
-                is >> objs.back().color;
+                is >> objs.back().material->color;
             } else if (token == "PLANE") {
                 Vec3<double> norm;
                 is >> norm;
-                objs.back().geom = std::unique_ptr<Geometry>(new Plane(norm));
+                objs.back().geometry = std::unique_ptr<Geometry>(new Plane(norm));
             } else if (token == "ELLIPSOID") {
                 Vec3<double> r;
                 is >> r;
-                objs.back().geom = std::unique_ptr<Geometry>(new Ellipsoid(r));
+                objs.back().geometry = std::unique_ptr<Geometry>(new Ellipsoid(r));
             } else if (token == "BOX") {
                 Vec3<double> size;
                 is >> size;
-                objs.back().geom = std::unique_ptr<Geometry>(new Box(size));
+                objs.back().geometry = std::unique_ptr<Geometry>(new Box(size));
             } else if (token == "NEW_PRIMITIVE") {
                 objs.emplace_back();
-            } else if (token == "RAY_DEPTH") {
-                is >> ray_depth;
-            } else if (token == "AMBIENT_LIGHT") {
-                is >> ambient_light;
-            } else if (token == "NEW_LIGHT") {
-                lights.emplace_back(Light::from_istream(is));
             } else if (token == "METALLIC") {
-                objs.back().material = METALLIC;
+                objs.back().material = std::unique_ptr<Material>(new Metallic());
             } else if (token == "DIELECTRIC") {
-                objs.back().material = DIELECTRIC;
+                objs.back().material = std::unique_ptr<Material>(new Dielectric());
             } else if (token == "IOR") {
-                is >> objs.back().ior;
+                double ior;
+                is >> ior;
+                dynamic_cast<Dielectric*>(objs.back().material.get())->ior = ior;
+            } else if (token == "EMISSION") {
+                Vec3<double> emission;
+                is >> emission;
+                dynamic_cast<Diffuse*>(objs.back().material.get())->emission = emission;
             } else {
                 std::cerr << "Unknown token: " << token << std::endl;
                 /* is.ignore(std::numeric_limits<std::streamsize>::max()); */
@@ -89,6 +97,7 @@ struct Scene {
             for (uint16_t y = 0; y < dimensions.second; ++y) {
                 double x_01 = (x + 0.5) / dimensions.first;
                 double y_01 = (y + 0.5) / dimensions.second;
+                // TODO render pixel several times due to Monte-Carlo sampling
                 output[y][x] = render_pixel(x_01 * 2 - 1, -(y_01 * 2 - 1));
             }
         }
@@ -127,37 +136,8 @@ private:
         auto tmp = get_intersect(ray);
         if (tmp) {
             auto& [obj, intersect] = tmp.value();
-            Vec3<double> pos = ray.reveal(intersect.t);
-            if (obj.material == DIFFUSE) {
-                return get_illumination(pos, intersect.normal) * obj.color;
-            } else if (obj.material == METALLIC) {
-                Ray reflected = reflect(pos, ray.v, intersect.normal);
-                return obj.color * raycast(reflected, ttl - 1);
-            } else if (obj.material == DIELECTRIC) {
-                Ray reflected = reflect(pos, ray.v, intersect.normal);
-                double ior = obj.ior;
-                if (!intersect.is_inside) {
-                    ior = 1 / ior;
-                }
-                // ior is n1 / n2
-                double cos_phi1 = intersect.normal % -ray.v;
-                double sin_phi2 = ior * sqrt(1 - cos_phi1 * cos_phi1);
-                if (sin_phi2 > 1) {
-                    // zero infiltrate case
-                    return raycast(reflected, ttl - 1);
-                } else {
-                    double cos_phi2 = sqrt(1 - sin_phi2 * sin_phi2);
-                    Vec3<double> infiltrated_v = ray.v * ior + intersect.normal * (ior * cos_phi1 - cos_phi2);
-                    Ray infiltrated = {pos, infiltrated_v.norm()};
-                    infiltrated.bump();
-                    double r0 = (!intersect.is_inside ? (1 - 1 / ior) / (1 / ior + 1) : (ior - 1) / (ior + 1));
-                    r0 *= r0;
-                    double reflectness = r0 + (1 - r0) * pow(1 - cos_phi1, 5);
-                    Vec3<double> res = raycast(reflected, ttl - 1) * reflectness;
-                    res = res + raycast(infiltrated, ttl - 1) * (1 - reflectness) * (!intersect.is_inside ? obj.color : 1);
-                    return res;
-                }
-            }
+            auto raycast_fn = std::bind(&Scene::raycast, this, _1, ttl - 1);
+            obj.material->sample(ray, intersect, raycast_fn);
             std::cerr << "Undefined material, black color used" << std::endl;
             /* return (intersect.normal + Vec3<double>{1, 1, 1}) * 0.5; */
             return {};
@@ -166,43 +146,10 @@ private:
         }
     }
 
-    Ray reflect(const Vec3<double> pos, const Vec3<double> d, const Vec3<double> normal) const {
-        Ray reflected = {pos, d - normal * 2 * (normal % d)};
-        reflected.bump();
-        return reflected;
-    }
-
-    Vec3<double> get_illumination(const Vec3<double>& p, const Vec3<double>& normal) const {
-        Vec3<double> illumination = ambient_light;
-        for (auto& light : lights) {
-            double visibility = 0;
-            if (dynamic_cast<PointLight*>(light.get()) != nullptr) {
-                auto plight = dynamic_cast<PointLight*>(light.get());
-                auto v = plight->position - p;
-                Ray ray = {p, v.norm()};
-                ray.bump();
-                auto inter = get_intersect(ray);
-                if (!inter || inter.value().second.t > v.len()) {
-                    visibility = std::max(0.0, ray.v % normal);
-                }
-            } else if (dynamic_cast<DirectLight*>(light.get()) != nullptr) {
-                auto dlight = dynamic_cast<DirectLight*>(light.get());
-                Ray ray = Ray{p, dlight->direction};
-                ray.bump();
-                if (!get_intersect(ray)) {
-                    visibility = std::max(0.0, dlight->direction % normal);
-                }
-            }
-            illumination = illumination + light->get_irradiance(p) * visibility;
-        }
-        /* std::cerr << illumination << std::endl; */
-        return illumination;
-    }
-
-    std::optional<std::pair<Primitive, Intersection>> get_intersect(const Ray& ray) const {
-        std::optional<std::pair<Primitive, Intersection>> bound;
+    std::optional<std::pair<Object, Intersection>> get_intersect(const Ray& ray) const {
+        std::optional<std::pair<Object, Intersection>> bound;
         for (auto& obj : objs) {
-            std::optional<Intersection> t = obj.get_intersect(ray);
+            std::optional<Intersection> t = obj.geometry->get_intersect(ray);
             if (t.has_value() && (!bound || bound.value().second.t > t.value().t)) {
                 bound = {{obj, t.value()}};
             }

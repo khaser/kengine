@@ -2,7 +2,7 @@
   description = "Render engine for graphics course";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
+    nixpkgs.follows = "khaser/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     khaser.url = "git+ssh://git@109.124.253.149/~git/nixos-config?ref=master";
   };
@@ -31,12 +31,11 @@
         '';
       });
     in {
-      devShell = pkgs.mkShell {
+      devShell = pkgs.clangStdenv.mkDerivation {
         name = "cpp";
 
         nativeBuildInputs = with pkgs; [
           configured-vim
-          gcc # compiler
           clang-tools # clangd(language server)
           cmake
           xxd
