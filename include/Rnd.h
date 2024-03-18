@@ -15,8 +15,6 @@ private:
 public:
     static Rnd* getRnd();
 
-    Vec3<double> in_hemisphere(Vec3<double> v);
-
     Vec3<double> in_sphere();
 
     double uniform(double Min, double Max);

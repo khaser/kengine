@@ -16,14 +16,6 @@ double Rnd::uniform(double Min, double Max) {
     return dis(rnd);
 }
 
-Vec3<double> Rnd::in_hemisphere(Vec3<double> v) {
-    Vec3<double> res = in_sphere();
-    if (res % v < 0) {
-        res = -res;
-    }
-    return res;
-}
-
 Rnd* Rnd::getRnd() {
     if (!instance) {
         return instance = new Rnd();

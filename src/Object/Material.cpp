@@ -2,19 +2,24 @@
 #include <optional>
 #include <functional>
 #include <stdexcept>
+#include <math.h>
 
 #include "Rnd.h"
 #include "Primitives.h"
+#include "Distribution.h"
 
 #include "Object/Material.h"
 
 Vec3<double> Diffuse::sample(Ray w_in, Intersection i,
                         const std::function<Vec3<double>(const Ray&)> &raycast) {
     Vec3<double> pos = w_in.reveal(i.t);
-    Vec3<double> w_out = Rnd::getRnd()->in_hemisphere(i.normal);
+    // TODO: should we construct distribution in Scene?
+    Uniform dist(pos, i.normal);
+    /* Cosine dist(pos, i.normal); */
+    Vec3<double> w_out = dist.sample();
     Ray r_out = Ray {pos, w_out};
     r_out.bump();
-    return emission + color * 2 * raycast(r_out) * (i.normal % w_out);
+    return emission + (color / M_PI) * raycast(r_out) * (i.normal % w_out) / dist.pdf(w_out);
 }
 
 static Ray reflect(const Vec3<double> pos, const Vec3<double> d, const Vec3<double> normal) {
