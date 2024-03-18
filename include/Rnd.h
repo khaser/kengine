@@ -1,8 +1,6 @@
 #pragma once
 
-#include <numbers>
 #include <random>
-#include <stdexcept>
 #include "Vec3.h"
 
 class Rnd {
