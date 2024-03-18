@@ -1,5 +1,4 @@
-#include "Quaternion.h"
-#include "Vec3.h"
+#include "Primitives/Quaternion.h"
 
 #include <fstream>
 

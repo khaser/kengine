@@ -1,5 +1,5 @@
 #include "Rnd.h"
-#include "Vec3.h"
+#include "Primitives/Vec3.h"
 
 #include <random>
 #include <math.h>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <random>
-#include "Vec3.h"
+#include "Primitives/Vec3.h"
 
 class Rnd {
 private:

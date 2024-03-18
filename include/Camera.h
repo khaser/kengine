@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-#include "Vec3.h"
-#include "Ray.h"
+#include "Primitives/Vec3.h"
+#include "Primitives/Ray.h"
 
 struct Camera {
     Vec3<double> position;

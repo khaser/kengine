@@ -1,7 +1,6 @@
-#include "Geometry.h"
-#include "Quaternion.h"
-#include "Vec3.h"
-#include "Intersection.h"
+#include "Primitives.h"
+
+#include "Object/Geometry.h"
 
 std::optional<Intersection> Geometry::get_intersect(Ray ray) const {
     ray.start = -rotation * (ray.start - position);

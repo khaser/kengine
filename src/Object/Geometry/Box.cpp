@@ -1,5 +1,5 @@
-#include "Vec3.h"
-#include "Geometry.h"
+#include "Primitives/Vec3.h"
+#include "Object/Geometry.h"
 
 Box::Box(const Vec3<double> &v) : size(v) {}
 

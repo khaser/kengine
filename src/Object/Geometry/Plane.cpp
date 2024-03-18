@@ -1,5 +1,5 @@
-#include "Geometry.h"
-#include "Vec3.h"
+#include "Primitives/Vec3.h"
+#include "Object/Geometry.h"
 
 Plane::Plane(const Vec3<double> &v) : norm(v.norm()) {}
 

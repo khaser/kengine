@@ -6,7 +6,7 @@
 #include <cassert>
 #include <cmath>
 
-#include "Vec3.h"
+#include "Primitives/Vec3.h"
 
 struct Image {
     uint16_t width, height;

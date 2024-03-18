@@ -4,10 +4,7 @@
 #include <cmath>
 #include <algorithm>
 
-#include "Quaternion.h"
-#include "Vec3.h"
-#include "Ray.h"
-#include "Intersection.h"
+#include "Primitives.h"
 
 struct Geometry {
     Quaternion rotation;
