@@ -156,9 +156,11 @@ Vec3<double> Scene::raycast(const Ray& ray, int ttl) const {
 std::optional<std::pair<Object, Intersection>> Scene::get_intersect(const Ray& ray) const {
     std::optional<std::pair<Object, Intersection>> bound;
     for (auto& obj : objs) {
-        std::optional<Intersection> t = obj.geometry->get_intersect(ray);
-        if (t.has_value() && (!bound || bound.value().second.t > t.value().t)) {
-            bound = {{obj, t.value()}};
+        std::vector<Intersection> obj_intersections = obj.geometry->get_intersect(ray);
+        for (auto &inter : obj_intersections) {
+            if (!bound || bound.value().second.t > inter.t) {
+                bound = {{obj, inter}};
+            }
         }
     }
     return bound;

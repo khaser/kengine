@@ -1,9 +1,8 @@
-#include <array>
-
 #include "Primitives/Vec3.h"
-#include "Rnd.h"
 
 #include "Object/Geometry.h"
+
+#include <vector>
 
 Box::Box(const Vec3<double> &v) : size(v) {}
 
@@ -19,19 +18,20 @@ Vec3<double> Box::normal(const Vec3<double>& p) const {
     }
 }
 
-std::optional<double> Box::get_intersect_(const Ray& ray) const {
+std::vector<double> Box::get_intersect_(const Ray& ray) const {
     Vec3<double> t1v = (size - ray.start) / ray.v;
     Vec3<double> t2v = (-size - ray.start) / ray.v;
     Vec3<double> tmin = min(t1v, t2v);
     Vec3<double> tmax = max(t1v, t2v);
     auto t1 = std::max({tmin.x, tmin.y, tmin.z});
     auto t2 = std::min({tmax.x, tmax.y, tmax.z});
-    if (t1 > t2 || t2 < 0) {
+    if (t1 > t2) {
         return {};
-    } else if (t1 > 0) {
-        return t1;
-    } else if (t2 > 0) {
-        return t2;
-    } else return {};
+    } else {
+        std::vector<double> res;
+        if (t1 > 0) res.push_back(t1);
+        if (t2 > 0) res.push_back(t2);
+        return res;
+    }
 };
 

@@ -67,7 +67,7 @@ struct BoxDistribution : public Distribution {
         auto &[x, y, z] = box->size;
         faces = {y * z, x * z, x * y};
         faces = faces * 4;
-        faces_square = faces.x + faces.y + faces.z;
+        faces_square = 2 * (faces.x + faces.y + faces.z);
     }
 
     ~BoxDistribution() {};
@@ -76,8 +76,8 @@ struct BoxDistribution : public Distribution {
         Rnd* rnd = Rnd::getRnd();
         auto &[x, y, z] = box->size;
 
-        Vec3<double> u = {rnd->uniform(-x, x), rnd->uniform(-y, y), rnd->uniform(-z, z)};
-        double pick_dim = rnd->uniform(0.0, faces_square);
+        vec3 u = {rnd->uniform(-x, x), rnd->uniform(-y, y), rnd->uniform(-z, z)};
+        double pick_dim = rnd->uniform(0.0, faces.x + faces.y + faces.z);
         double pick_front_back = rnd->bernoulli() ? 1 : -1;
 
         if (pick_dim < faces.x) {
@@ -97,8 +97,15 @@ struct BoxDistribution : public Distribution {
         return (box_sample() - pos).norm();
     }
 
-    double pdf(const vec3 &pos, const vec3 &n, const vec3 &d) {
-        return (box->get_intersect({pos, d}) ? 2 : 0);
+    double pdf(const vec3 &pos, const vec3&, const vec3 &d) {
+        // TODO: split into pdf_ (geometry specific without angle multiplier)
+        // and pdf (geometry abstract, with angle multiplier)
+        double res = 0;
+        Ray r = {pos, d};
+        for (auto &obj_inter : box->get_intersect(r)) {
+            res += obj_inter.t * obj_inter.t / abs(obj_inter.normal % d);
+        }
+        return res / (M_PI * faces_square);
     }
 
 };
@@ -120,7 +127,8 @@ struct MixedDistribution : public Distribution {
             std::accumulate(dists.begin(), dists.end(), 0.0, [&] (double acc, const std::unique_ptr<Distribution> &dist) {
                 return acc + dist->pdf(pos, n, d);
             });
-        /* if (res == 0) throw std::logic_error("zero probability density on sample"); */
+        if (res == 0) throw std::logic_error("zero probability density on sample");
+
         return res / dists.size();
     }
 

@@ -2,22 +2,21 @@
 
 #include "Object/Geometry.h"
 
-std::optional<Intersection> Geometry::get_intersect(Ray ray) const {
+std::vector<Intersection> Geometry::get_intersect(Ray ray) const {
     ray.start = -rotation * (ray.start - position);
     ray.v = -rotation * ray.v;
-    std::optional<double> intersect = get_intersect_(ray);
-    if (intersect) {
-        double t = intersect.value();
-        Vec3<double> n = normal(ray.reveal(intersect.value()));
+    std::vector<double> inter_lens = get_intersect_(ray);
+    std::vector<Intersection> res;
+    for (double &t : inter_lens) {
+        Vec3<double> n = normal(ray.reveal(t));
         bool is_ins = is_inside(ray, t);
         if (is_ins) {
             n = -n;
         }
         n = (rotation * n).norm();
-        return {{t, n, is_ins}};
-    } else {
-        return std::nullopt;
+        res.push_back({t, n, is_ins});
     }
+    return res;
 }
 
 bool Geometry::is_inside(const Ray &ray, double t) const {
