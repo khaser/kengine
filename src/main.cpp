@@ -19,21 +19,5 @@ int main(int argc, char* argv[]) {
     img.write_ppm(std::ofstream(output_path));
     std::cerr << "Image dumped to " << output_path << '\n';
 
-    /* const int samples = 1'000'000; */
-    /* BoxDistribution dist = { std::dynamic_pointer_cast<Box>(scene.objs[5].geometry) }; */
-    /* Vec3<double> pos = {0, 0, 15}; */
-    /* Vec3<double> n = {0, 0, -1}; */
-    /* UniformDistribution uniform; */
-    /* std::cerr << dist.box->size << ' ' << dist.faces_square << std::endl; */
-    /* double res = 0; */
-    /* for (int i = 0; i < samples; ++i) { */
-    /*     auto d = uniform.sample(pos, n); */
-    /*     auto p = dist.pdf(pos, n, d) ; */
-    /*     res += p / uniform.pdf(pos, n, d); */
-    /* } */
-    /* res /= samples; */
-    /* std::cerr << res << '\n'; */
-
-
     return 0;
 }

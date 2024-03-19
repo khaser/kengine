@@ -34,7 +34,6 @@ struct Ellipsoid : public Geometry {
     virtual ~Ellipsoid() {};
     std::vector<double> get_intersect_(const Ray&) const;
     Vec3<double> normal(const Vec3<double>&) const;
-    Vec3<double> gen_sample() const;
 };
 
 struct Box : public Geometry {
@@ -43,5 +42,4 @@ struct Box : public Geometry {
     virtual ~Box() {};
     std::vector<double> get_intersect_(const Ray&) const;
     Vec3<double> normal(const Vec3<double>&) const;
-    Vec3<double> gen_sample() const;
 };

@@ -57,7 +57,6 @@ struct CosineDistribution : public Distribution {
 };
 
 
-// TODO: prevent generating samples with incorrect cross product!
 template<typename T>
 struct LightDistribution : public Distribution {
     std::shared_ptr<T> geom;
@@ -65,7 +64,7 @@ struct LightDistribution : public Distribution {
     ~LightDistribution() {}
 
     vec3 sample(const vec3 &pos, const vec3&) {
-        vec3 x = geom->position + geom->rotation * sample_(pos);
+        vec3 x = geom->position + geom->rotation * sample_();
         return (x - pos).norm();
     }
 
@@ -81,7 +80,7 @@ struct LightDistribution : public Distribution {
 
 private:
     // return sample from geom in local cords
-    virtual vec3 sample_(const vec3 &pos) = 0;
+    virtual vec3 sample_() = 0;
     // return geometry point pdf
     virtual double pdf_(const vec3 &pos) = 0;
 };
@@ -101,7 +100,7 @@ struct BoxDistribution : public LightDistribution<Box> {
 
     ~BoxDistribution() {};
 
-    vec3 sample_(const vec3 &) {
+    vec3 sample_() {
         Rnd* rnd = Rnd::getRnd();
         auto &[x, y, z] = geom->size;
 
@@ -131,13 +130,16 @@ struct EllipsoidDistribution : public LightDistribution<Ellipsoid> {
 
     ~EllipsoidDistribution() {};
 
-    // TODO:
-    vec3 sample_(const vec3 &) {
-        return {0, 0, 0};
+    vec3 sample_() {
+        return geom->r * rnd->in_sphere();
     }
 
-    double pdf_(const vec3 &) {
-        return 0;
+    double pdf_(const vec3 &pos) {
+        vec3 n = geom->normal(pos);
+        vec3 n2 = n * n;
+        vec3 r2 = geom->r * geom->r;
+        double res = sqrt(n2.x * r2.y * r2.z + r2.x * n2.y * r2.z + r2.x * r2.y * n2.z);
+        return 1.0 / (4 * res);
     }
 
 };
