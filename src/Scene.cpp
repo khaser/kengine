@@ -22,7 +22,7 @@ Scene::Scene(std::ifstream is) {
 
     std::string token;
     std::vector<std::unique_ptr<Distribution>> dists;
-    /* dists.push_back(std::make_unique<CosineDistribution>()); */
+    dists.push_back(std::make_unique<CosineDistribution>());
 
     while (is >> token) {
         if (token == "DIMENSIONS") {
@@ -83,8 +83,12 @@ Scene::Scene(std::ifstream is) {
             Vec3<double> emission;
             is >> emission;
             dynamic_pointer_cast<Diffuse>(objs.back().material)->emission = emission;
-            // TODO: ellipsoid support
-            dists.push_back(std::make_unique<BoxDistribution>(std::dynamic_pointer_cast<Box>(objs.back().geometry)));
+
+            if (auto t = std::dynamic_pointer_cast<Box>(objs.back().geometry)) {
+                dists.push_back(std::make_unique<BoxDistribution>(t));
+            } else if (auto t = std::dynamic_pointer_cast<Ellipsoid>(objs.back().geometry)) {
+                dists.push_back(std::make_unique<EllipsoidDistribution>(t));
+            }
         } else {
             std::cerr << "Unknown token: " << token << std::endl;
         }

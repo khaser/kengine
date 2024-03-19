@@ -12,7 +12,6 @@
 
 typedef Vec3<double> vec3;
 
-// Distribution on hemisphere class
 struct Distribution {
     Distribution() : rnd(Rnd::getRnd()) {}
     virtual ~Distribution() {}
@@ -20,6 +19,7 @@ struct Distribution {
     virtual double pdf(const vec3 &pos, const vec3 &n, const vec3 &d) = 0;
     Rnd *rnd;
 };
+
 
 struct UniformDistribution : public Distribution {
 
@@ -57,14 +57,43 @@ struct CosineDistribution : public Distribution {
 };
 
 
-struct BoxDistribution : public Distribution {
+// TODO: prevent generating samples with incorrect cross product!
+template<typename T>
+struct LightDistribution : public Distribution {
+    std::shared_ptr<T> geom;
+    LightDistribution(std::shared_ptr<T> geom) : geom(geom), Distribution() {}
+    ~LightDistribution() {}
 
-    std::shared_ptr<Box> box;
+    vec3 sample(const vec3 &pos, const vec3&) {
+        vec3 x = geom->position + geom->rotation * sample_(pos);
+        return (x - pos).norm();
+    }
+
+    // angle pdf
+    double pdf(const vec3 &pos, const vec3 &n, const vec3 &d) {
+        double res = 0;
+        Ray r = {pos, d};
+        for (auto &obj_inter : geom->get_intersect(r)) {
+            res += pdf_(pos) * obj_inter.t * obj_inter.t / abs(obj_inter.normal % d);
+        }
+        return res / M_PI;
+    }
+
+private:
+    // return sample from geom in local cords
+    virtual vec3 sample_(const vec3 &pos) = 0;
+    // return geometry point pdf
+    virtual double pdf_(const vec3 &pos) = 0;
+};
+
+
+struct BoxDistribution : public LightDistribution<Box> {
+
     vec3 faces;
     double faces_square;
 
-    BoxDistribution(std::shared_ptr<Box> b) : Distribution(), box(b) {
-        auto &[x, y, z] = box->size;
+    BoxDistribution(std::shared_ptr<Box> b) : LightDistribution(b) {
+        auto &[x, y, z] = geom->size;
         faces = {y * z, x * z, x * y};
         faces = faces * 4;
         faces_square = 2 * (faces.x + faces.y + faces.z);
@@ -72,9 +101,9 @@ struct BoxDistribution : public Distribution {
 
     ~BoxDistribution() {};
 
-    vec3 box_sample_() {
+    vec3 sample_(const vec3 &) {
         Rnd* rnd = Rnd::getRnd();
-        auto &[x, y, z] = box->size;
+        auto &[x, y, z] = geom->size;
 
         vec3 u = {rnd->uniform(-x, x), rnd->uniform(-y, y), rnd->uniform(-z, z)};
         double pick_dim = rnd->uniform(0.0, faces.x + faces.y + faces.z);
@@ -89,23 +118,26 @@ struct BoxDistribution : public Distribution {
         }
     }
 
-    vec3 box_sample() {
-        return box->position + box->rotation * box_sample_();
+    double pdf_(const vec3 &) {
+        return 1 / faces_square;
     }
 
-    vec3 sample(const vec3 &pos, const vec3&) {
-        return (box_sample() - pos).norm();
+};
+
+
+struct EllipsoidDistribution : public LightDistribution<Ellipsoid> {
+
+    EllipsoidDistribution(std::shared_ptr<Ellipsoid> b) : LightDistribution(b) { }
+
+    ~EllipsoidDistribution() {};
+
+    // TODO:
+    vec3 sample_(const vec3 &) {
+        return {0, 0, 0};
     }
 
-    double pdf(const vec3 &pos, const vec3&, const vec3 &d) {
-        // TODO: split into pdf_ (geometry specific without angle multiplier)
-        // and pdf (geometry abstract, with angle multiplier)
-        double res = 0;
-        Ray r = {pos, d};
-        for (auto &obj_inter : box->get_intersect(r)) {
-            res += obj_inter.t * obj_inter.t / abs(obj_inter.normal % d);
-        }
-        return res / (M_PI * faces_square);
+    double pdf_(const vec3 &) {
+        return 0;
     }
 
 };
