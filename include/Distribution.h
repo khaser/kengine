@@ -98,7 +98,7 @@ struct BoxDistribution : public Distribution {
     }
 
     double pdf(const vec3 &pos, const vec3 &n, const vec3 &d) {
-        return (box->get_intersect({pos, d}) ? 1 : 0);
+        return (box->get_intersect({pos, d}) ? 2 : 0);
     }
 
 };
@@ -116,10 +116,12 @@ struct MixedDistribution : public Distribution {
     }
 
     double pdf(const vec3 &pos, const vec3 &n, const vec3 &d) {
-        return
+        double res =
             std::accumulate(dists.begin(), dists.end(), 0.0, [&] (double acc, const std::unique_ptr<Distribution> &dist) {
                 return acc + dist->pdf(pos, n, d);
             });
+        /* if (res == 0) throw std::logic_error("zero probability density on sample"); */
+        return res / dists.size();
     }
 
 };

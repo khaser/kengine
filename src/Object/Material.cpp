@@ -13,6 +13,11 @@
 Vec3<double> Diffuse::sample(Ray w_in, Intersection i,
                         const std::function<Vec3<double>(const Ray&)> &raycast) {
     Vec3<double> pos = w_in.reveal(i.t);
+    {
+        Ray r = {pos, i.normal};
+        r.bump();
+        pos = r.start;
+    }
     Vec3<double> w_out = dist->sample(pos, i.normal);
     Ray r_out = Ray {pos, w_out};
     r_out.bump();

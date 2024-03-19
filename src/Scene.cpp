@@ -14,6 +14,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <cmath>
 
 using namespace std::placeholders;
 
@@ -21,7 +22,7 @@ Scene::Scene(std::ifstream is) {
 
     std::string token;
     std::vector<std::unique_ptr<Distribution>> dists;
-    dists.push_back(std::make_unique<CosineDistribution>());
+    /* dists.push_back(std::make_unique<CosineDistribution>()); */
 
     while (is >> token) {
         if (token == "DIMENSIONS") {
