@@ -13,13 +13,10 @@
 Vec3<double> Diffuse::sample(Ray w_in, Intersection i,
                         const std::function<Vec3<double>(const Ray&)> &raycast) {
     Vec3<double> pos = w_in.reveal(i.t);
-    // TODO: should we construct distribution in Scene?
-    /* UniformDistribution dist; */
-    CosineDistribution dist;
-    Vec3<double> w_out = dist.sample(pos, i.normal);
+    Vec3<double> w_out = dist->sample(pos, i.normal);
     Ray r_out = Ray {pos, w_out};
     r_out.bump();
-    return emission + (color / M_PI) * raycast(r_out) * (i.normal % w_out) / dist.pdf(pos, i.normal, w_out);
+    return emission + (color / M_PI) * raycast(r_out) * (i.normal % w_out) / dist->pdf(pos, i.normal, w_out);
 }
 
 static Ray reflect(const Vec3<double> pos, const Vec3<double> d, const Vec3<double> normal) {

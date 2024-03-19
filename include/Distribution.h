@@ -3,15 +3,19 @@
 #include "Primitives/Vec3.h"
 #include "Object/Geometry.h"
 #include "Rnd.h"
+
 #include <math.h>
 #include <algorithm>
 #include <vector>
+#include <memory>
+#include <iostream>
 
 typedef Vec3<double> vec3;
 
 // Distribution on hemisphere class
 struct Distribution {
     Distribution() : rnd(Rnd::getRnd()) {}
+    virtual ~Distribution() {}
     virtual vec3 sample(const vec3 &pos, const vec3 &n) = 0;
     virtual double pdf(const vec3 &pos, const vec3 &n, const vec3 &d) = 0;
     Rnd *rnd;
@@ -20,6 +24,7 @@ struct Distribution {
 struct UniformDistribution : public Distribution {
 
     UniformDistribution() : Distribution() {}
+    ~UniformDistribution() {};
 
     vec3 sample(const vec3 &pos, const vec3 &n) {
         vec3 res = rnd->in_sphere();
@@ -38,6 +43,7 @@ struct UniformDistribution : public Distribution {
 
 struct CosineDistribution : public Distribution {
     CosineDistribution() : Distribution() {}
+    ~CosineDistribution() {};
 
     vec3 sample(const vec3 &pos, const vec3 &n) {
         vec3 res = rnd->in_sphere();
@@ -53,20 +59,22 @@ struct CosineDistribution : public Distribution {
 
 struct BoxDistribution : public Distribution {
 
-    Box box;
+    std::shared_ptr<Box> box;
     vec3 faces;
     double faces_square;
 
-    BoxDistribution(const Box &b) : Distribution(), box(b) {
-        auto &[x, y, z] = box.size;
+    BoxDistribution(std::shared_ptr<Box> b) : Distribution(), box(b) {
+        auto &[x, y, z] = box->size;
         faces = {y * z, x * z, x * y};
         faces = faces * 4;
         faces_square = faces.x + faces.y + faces.z;
     }
 
-    vec3 box_sample(const vec3 &pos, const vec3 &n) {
+    ~BoxDistribution() {};
+
+    vec3 box_sample_() {
         Rnd* rnd = Rnd::getRnd();
-        auto &[x, y, z] = box.size;
+        auto &[x, y, z] = box->size;
 
         Vec3<double> u = {rnd->uniform(-x, x), rnd->uniform(-y, y), rnd->uniform(-z, z)};
         double pick_dim = rnd->uniform(0.0, faces_square);
@@ -81,34 +89,37 @@ struct BoxDistribution : public Distribution {
         }
     }
 
-    vec3 sample(const vec3 &pos, const vec3 &n) {
-        return (box_sample(pos, n) - pos).norm();
+    vec3 box_sample() {
+        return box->position + box->rotation * box_sample_();
+    }
+
+    vec3 sample(const vec3 &pos, const vec3&) {
+        return (box_sample() - pos).norm();
     }
 
     double pdf(const vec3 &pos, const vec3 &n, const vec3 &d) {
-        Ray r = {pos, d};
-        return (box.get_intersect(r) ? 1 / faces_square : 0);
+        return (box->get_intersect({pos, d}) ? 1 : 0);
     }
 
 };
 
 
 struct MixedDistribution : public Distribution {
-    std::vector<Distribution*> dists;
+    std::vector<std::unique_ptr<Distribution>> dists;
 
-    MixedDistribution(const std::vector<Distribution*> &dists) : dists(dists) {}
+    MixedDistribution(std::vector<std::unique_ptr<Distribution>> &&dists) : dists(std::move(dists)) {}
+    ~MixedDistribution() {};
 
     vec3 sample(const vec3 &pos, const vec3 &n) {
         Rnd *rnd = Rnd::getRnd();
         return dists[rnd->uniform_int(0, dists.size())]->sample(pos, n);
     }
 
-
     double pdf(const vec3 &pos, const vec3 &n, const vec3 &d) {
         return
-            std::accumulate(dists.begin(), dists.end(), 0.0, [&] (double acc, Distribution* dist) {
+            std::accumulate(dists.begin(), dists.end(), 0.0, [&] (double acc, const std::unique_ptr<Distribution> &dist) {
                 return acc + dist->pdf(pos, n, d);
-            }) / dists.size();
+            });
     }
 
 };

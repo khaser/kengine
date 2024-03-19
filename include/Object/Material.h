@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Primitives.h"
+#include "Distribution.h"
 
 #include <functional>
+#include <memory>
 
 struct Material {
     Vec3<double> color;
@@ -13,6 +15,7 @@ struct Material {
 
 struct Diffuse : public Material {
     Vec3<double> emission;
+    std::shared_ptr<Distribution> dist;
     Vec3<double> sample(Ray w_in, Intersection i,
                             const std::function<Vec3<double>(const Ray&)> &raycast);
 };

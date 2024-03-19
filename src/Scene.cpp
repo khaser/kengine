@@ -2,6 +2,7 @@
 #include "Object.h"
 #include "Primitives.h"
 #include "Rnd.h"
+#include "Distribution.h"
 
 #include "Scene.h"
 
@@ -11,11 +12,17 @@
 #include <utility>
 #include <type_traits>
 #include <string>
+#include <memory>
+#include <vector>
 
 using namespace std::placeholders;
 
 Scene::Scene(std::ifstream is) {
+
     std::string token;
+    std::vector<std::unique_ptr<Distribution>> dists;
+    dists.push_back(std::make_unique<CosineDistribution>());
+
     while (is >> token) {
         if (token == "DIMENSIONS") {
             is >> dimensions.first >> dimensions.second;
@@ -70,13 +77,22 @@ Scene::Scene(std::ifstream is) {
         } else if (token == "IOR") {
             double ior;
             is >> ior;
-            dynamic_cast<Dielectric*>(objs.back().material.get())->ior = ior;
+            dynamic_pointer_cast<Dielectric>(objs.back().material)->ior = ior;
         } else if (token == "EMISSION") {
             Vec3<double> emission;
             is >> emission;
-            dynamic_cast<Diffuse*>(objs.back().material.get())->emission = emission;
+            dynamic_pointer_cast<Diffuse>(objs.back().material)->emission = emission;
+            // TODO: ellipsoid support
+            dists.push_back(std::make_unique<BoxDistribution>(std::dynamic_pointer_cast<Box>(objs.back().geometry)));
         } else {
             std::cerr << "Unknown token: " << token << std::endl;
+        }
+    }
+
+    auto dist = std::make_shared<MixedDistribution>(std::move(dists));
+    for (auto &obj : objs) {
+        if (auto t = dynamic_pointer_cast<Diffuse>(obj.material)) {
+            t->dist = dist;
         }
     }
 }
@@ -92,9 +108,9 @@ std::vector<std::vector<Vec3<double>>> Scene::render_scene() {
                 double y_01 = (y + Rnd::getRnd()->uniform(0, 1)) / dimensions.second;
                 double x_11 = x_01 * 2 - 1;
                 double y_11 = y_01 * 2 - 1;
-                pixel = pixel + raycast(camera.raycast(x_11, -y_11), ray_depth) / samples;
+                pixel = pixel + raycast(camera.raycast(x_11, -y_11), ray_depth);
             }
-            output[y][x] = postprocess(pixel);
+            output[y][x] = postprocess(pixel / samples);
         }
     }
     return output;
