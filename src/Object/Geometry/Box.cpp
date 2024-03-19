@@ -1,4 +1,8 @@
+#include <array>
+
 #include "Primitives/Vec3.h"
+#include "Rnd.h"
+
 #include "Object/Geometry.h"
 
 Box::Box(const Vec3<double> &v) : size(v) {}

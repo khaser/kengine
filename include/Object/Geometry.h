@@ -12,10 +12,10 @@ struct Geometry {
 
     virtual ~Geometry() {};
 
-    std::optional<Intersection> get_intersect(Ray) const;
+    std::optional<Intersection> get_intersect(Ray ray) const;
     virtual Vec3<double> normal(const Vec3<double>& p) const = 0;
 private:
-    virtual std::optional<double> get_intersect_(const Ray& ray) const = 0;
+    virtual std::optional<double> get_intersect_(const Ray&) const = 0;
     bool is_inside(const Ray&, double) const;
 };
 
@@ -32,7 +32,10 @@ struct Ellipsoid : public Geometry {
     Ellipsoid(const Vec3<double>&);
     virtual ~Ellipsoid() {};
     std::optional<double> get_intersect_(const Ray&) const;
+    // TODO should implement
+    // std::optional<std::pair<double, double>> get_intersect2(const Ray&) const;
     Vec3<double> normal(const Vec3<double>&) const;
+    Vec3<double> gen_sample() const;
 };
 
 struct Box : public Geometry {
@@ -41,4 +44,5 @@ struct Box : public Geometry {
     virtual ~Box() {};
     std::optional<double> get_intersect_(const Ray&) const;
     Vec3<double> normal(const Vec3<double>&) const;
+    Vec3<double> gen_sample() const;
 };

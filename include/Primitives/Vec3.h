@@ -8,12 +8,15 @@ template<typename T>
 struct Vec3 {
     T x, y, z;
 
-    Vec3() : x(0), y(0), z(0) {}
-    Vec3(const T& k) : x(k), y(k), z(k) {}
+    explicit Vec3() : x(0), y(0), z(0) {}
+    explicit Vec3(const T& k) : x(k), y(k), z(k) {}
     Vec3(const T& x, const T& y, const T& z) : x(x), y(y), z(z) { }
 
     Vec3<T> operator*(const T& k) const {
         return {x * k, y * k, z * k};
+    }
+    Vec3<T> operator/(const T& k) const {
+        return {x / k, y / k, z / k};
     }
     Vec3<T> operator+(const T& k) const {
         return {x + k, y + k, z + k};
