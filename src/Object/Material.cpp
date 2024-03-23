@@ -21,6 +21,9 @@ Vec3<double> Diffuse::sample(Ray w_in, Intersection i,
     Vec3<double> w_out = dist->sample(pos, i.normal);
     Ray r_out = Ray {pos, w_out};
     r_out.bump();
+    if (emission != Vec3<double>{0}) {
+        return {emission};
+    }
     return emission + (color / M_PI) * raycast(r_out) * (i.normal % w_out) / dist->pdf(pos, i.normal, w_out);
 }
 

@@ -12,6 +12,12 @@ struct Vec3 {
     explicit Vec3(const T& k) : x(k), y(k), z(k) {}
     Vec3(const T& x, const T& y, const T& z) : x(x), y(y), z(z) { }
 
+    bool operator==(const Vec3<T> &oth) const {
+        return x == oth.x && y == oth.y && z == oth.z;
+    }
+    bool operator!=(const Vec3<T> &oth) const {
+        return x != oth.x || y != oth.y || z != oth.z;
+    }
     Vec3<T> operator*(const T& k) const {
         return {x * k, y * k, z * k};
     }
