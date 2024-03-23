@@ -40,6 +40,8 @@
           cmake
           xxd
           gdb
+          linuxKernel.packages.linux_zen.perf
+          llvmPackages.openmp
         ];
 
       };

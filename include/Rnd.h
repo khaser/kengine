@@ -6,6 +6,7 @@
 class Rnd {
 private:
     static Rnd *instance;
+#pragma omp threadprivate(instance)
     Rnd() {}
     Rnd(const Rnd&);
     Rnd& operator=(Rnd&);

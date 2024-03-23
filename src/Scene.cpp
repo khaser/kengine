@@ -14,7 +14,6 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <cmath>
 
 using namespace std::placeholders;
 
@@ -105,6 +104,7 @@ Scene::Scene(std::ifstream is) {
 
 std::vector<std::vector<Vec3<double>>> Scene::render_scene() {
     std::vector<std::vector<Vec3<double>>> output(dimensions.second, std::vector<Vec3<double>>(dimensions.first));
+#pragma omp parallel for
     for (uint16_t x = 0; x < dimensions.first; ++x) {
         for (uint16_t y = 0; y < dimensions.second; ++y) {
             Vec3<double> pixel;

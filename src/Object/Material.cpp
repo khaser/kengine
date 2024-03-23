@@ -71,9 +71,14 @@ Vec3<double> Dielectric::sample(Ray w_in, Intersection i,
 
 }
 
+double pow5(double x) {
+    double tmp = x * x;
+    return tmp * tmp * x;
+}
+
 double Dielectric::get_reflectness(double cos_phi1, bool is_inside) {
     double r0 = (ior - 1) / (ior + 1);
     r0 *= r0;
-    return r0 + (1 - r0) * pow(1 - cos_phi1, 5);
+    return r0 + (1 - r0) * pow5(1 - cos_phi1);
 }
 

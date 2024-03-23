@@ -1,2 +1,2 @@
 #/usr/bin/env bash
-./build/kengine $@
+time ./build/kengine $@

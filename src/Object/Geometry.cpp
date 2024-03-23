@@ -5,9 +5,8 @@
 std::vector<Intersection> Geometry::get_intersect(Ray ray) const {
     ray.start = -rotation * (ray.start - position);
     ray.v = -rotation * ray.v;
-    std::vector<double> inter_lens = get_intersect_(ray);
     std::vector<Intersection> res;
-    for (double &t : inter_lens) {
+    for (double &t : get_intersect_(ray)) {
         Vec3<double> n = normal(ray.reveal(t));
         bool is_ins = is_inside(ray, t);
         if (is_ins) {
