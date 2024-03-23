@@ -18,7 +18,7 @@ double MixedDistribution::pdf(const vec3 &pos, const vec3 &n, const vec3 &d) {
         std::accumulate(dists.begin(), dists.end(), 0.0, [&] (double acc, const std::unique_ptr<Distribution> &dist) {
             return acc + dist->pdf(pos, n, d);
         });
-    if (res == 0) throw std::logic_error("zero probability density on sample");
+    if (res == 0) throw std::logic_error("zero probability density by direciton");
 
     return res / dists.size();
 }

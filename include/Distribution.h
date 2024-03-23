@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Primitives/Vec3.h"
+#include "Primitives/Ray.h"
+#include "Primitives/Intersection.h"
 #include "Object/Geometry.h"
 #include "Rnd.h"
 
@@ -51,8 +53,12 @@ struct LightDistribution : public Distribution {
     double pdf(const Vec3<double> &pos, const Vec3<double> &n, const Vec3<double> &d) {
         double res = 0;
         Ray r = {pos, d};
-        for (auto &obj_inter : geom->get_intersect(r)) {
-            res += pdf_(pos) * obj_inter.t * obj_inter.t / abs(obj_inter.normal % d);
+        for (Intersection &obj_inter : geom->get_intersect(r)) {
+            double tmp = pdf_(-geom->rotation * (r.reveal(obj_inter.t) - geom->position));
+            if (tmp == 0) {
+                throw std::logic_error("zero probability density by point");
+            }
+            res += tmp * obj_inter.t * obj_inter.t / abs(obj_inter.normal % d);
         }
         return res / M_PI;
     }

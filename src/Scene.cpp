@@ -88,6 +88,7 @@ Scene::Scene(std::ifstream is) {
             } else if (auto t = std::dynamic_pointer_cast<Ellipsoid>(objs.back().geometry)) {
                 dists.push_back(std::make_unique<EllipsoidDistribution>(t));
             }
+
         } else {
             std::cerr << "Unknown token: " << token << std::endl;
         }
@@ -107,7 +108,7 @@ std::vector<std::vector<Vec3<double>>> Scene::render_scene() {
 #pragma omp parallel for
     for (uint16_t x = 0; x < dimensions.first; ++x) {
         for (uint16_t y = 0; y < dimensions.second; ++y) {
-            Vec3<double> pixel;
+            Vec3<double> pixel = {0, 0, 0};
             for (uint16_t sample = 0; sample < samples; ++sample) {
                 double x_01 = (x + Rnd::getRnd()->uniform(0, 1)) / dimensions.first;
                 double y_01 = (y + Rnd::getRnd()->uniform(0, 1)) / dimensions.second;
@@ -153,6 +154,7 @@ Vec3<double> Scene::raycast(const Ray& ray, int ttl) const {
         auto raycast_fn = std::bind(&Scene::raycast, this, _1, ttl - 1);
         return obj.material->sample(ray, intersect, raycast_fn);
     } else {
+        std::cerr << "No intersections\n";
         return bg_color;
     }
 }

@@ -2,6 +2,7 @@
 #include <optional>
 #include <functional>
 #include <stdexcept>
+#include <algorithm>
 #include <math.h>
 
 #include "Rnd.h"
@@ -22,7 +23,10 @@ Vec3<double> Diffuse::sample(Ray w_in, Intersection i,
     Ray r_out = Ray {pos, w_out};
     r_out.bump();
     if (emission != Vec3<double>{0}) {
-        return {emission};
+        return emission;
+    }
+    if (w_out % i.normal <= 0) {
+        return {0, 0, 0};
     }
     return emission + (color / M_PI) * raycast(r_out) * (i.normal % w_out) / dist->pdf(pos, i.normal, w_out);
 }

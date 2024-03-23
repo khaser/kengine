@@ -14,7 +14,7 @@ vec3 EllipsoidDistribution::sample_() {
 }
 
 double EllipsoidDistribution::pdf_(const vec3 &pos) {
-    vec3 n = geom->normal(pos);
+    vec3 n = (pos / geom->r).norm();
     vec3 n2 = n * n;
     vec3 r2 = geom->r * geom->r;
     double res = sqrt(n2.x * r2.y * r2.z + r2.x * n2.y * r2.z + r2.x * r2.y * n2.z);
