@@ -60,7 +60,7 @@ struct LightDistribution : public Distribution {
             }
             res += tmp * obj_inter.t * obj_inter.t / abs(obj_inter.normal % d);
         }
-        return res / M_PI;
+        return res;
     }
 
 private:

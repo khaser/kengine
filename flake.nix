@@ -25,7 +25,6 @@
           let g:cpp_concepts_highlight = 1
 
           autocmd filetype cpp map <silent> <F1> :!export CMAKE_BUILD_TYPE=Debug && ./build.sh <CR>
-          autocmd filetype cpp map <silent> <F2> :!./run.sh ./scenes/example.cmds ./artifacts/example.p6 <CR>
           let &path.="include,src,${pkgs.glibc.dev}/include"
           let g:ycm_clangd_binary_path = '${pkgs.clang-tools}/bin/clangd'
         '';

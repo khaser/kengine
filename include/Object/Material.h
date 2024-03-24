@@ -31,6 +31,6 @@ struct Dielectric : public Material {
     Vec3<double> sample(Ray w_in, Intersection i,
                             const std::function<Vec3<double>(const Ray&)> &raycast);
 private:
-    double get_reflectness(double cos_phi1, bool is_inside);
+    double get_reflectness(double cos_phi1);
 };
 

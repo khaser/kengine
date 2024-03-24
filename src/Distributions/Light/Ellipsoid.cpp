@@ -18,6 +18,6 @@ double EllipsoidDistribution::pdf_(const vec3 &pos) {
     vec3 n2 = n * n;
     vec3 r2 = geom->r * geom->r;
     double res = sqrt(n2.x * r2.y * r2.z + r2.x * n2.y * r2.z + r2.x * r2.y * n2.z);
-    return 1.0 / (4 * res);
+    return 1.0 / (4 * M_PI * res);
 }
 

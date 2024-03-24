@@ -60,11 +60,11 @@ Vec3<double> Dielectric::sample(Ray w_in, Intersection i,
         double cos_phi2 = sqrt(1 - sin_phi2 * sin_phi2);
         double rnd_val = Rnd::getRnd()->uniform(0, 1);
 
-        if (rnd_val > get_reflectness(cos_phi1, i.is_inside)) {
+        if (rnd_val > get_reflectness(cos_phi1)) {
             // refraction case
             Ray refracted = {pos, (w_in.v * k + i.normal * (k * cos_phi1 - cos_phi2)).norm()};
             refracted.bump();
-            return color * raycast(refracted);
+            return (!i.is_inside ? color : Vec3<double>{1}) * raycast(refracted);
         } else {
             // reflection case
             Ray reflected = reflect(pos, w_in.v, i.normal);
@@ -80,7 +80,7 @@ double pow5(double x) {
     return tmp * tmp * x;
 }
 
-double Dielectric::get_reflectness(double cos_phi1, bool is_inside) {
+double Dielectric::get_reflectness(double cos_phi1) {
     double r0 = (ior - 1) / (ior + 1);
     r0 *= r0;
     return r0 + (1 - r0) * pow5(1 - cos_phi1);
