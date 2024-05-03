@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <math.h>
+#include <iostream>
 
 #include "Rnd.h"
 #include "Primitives.h"
@@ -21,6 +22,7 @@ Vec3<double> Diffuse::sample(Ray w_in, Intersection i,
     }
     Vec3<double> w_out = dist->sample(pos, i.normal);
     Ray r_out = Ray {pos, w_out};
+
     r_out.bump();
     if (emission != Vec3<double>{0}) {
         return emission;

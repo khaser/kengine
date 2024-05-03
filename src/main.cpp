@@ -8,6 +8,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Usage: kengine <path to scene> <path for output p6 image>\n";
         return 1;
     }
+
     std::string scene_path(argv[1]);
     std::string output_path(argv[2]);
 

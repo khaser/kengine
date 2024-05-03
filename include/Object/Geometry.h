@@ -43,3 +43,12 @@ struct Box : public Geometry {
     std::vector<double> get_intersect_(const Ray&) const;
     Vec3<double> normal(const Vec3<double>&) const;
 };
+
+struct Triangle : public Geometry {
+    Mat3<double> vert;
+    Vec3<double> u, v;
+    Triangle(const Mat3<double>&);
+    virtual ~Triangle() {};
+    std::vector<double> get_intersect_(const Ray&) const;
+    Vec3<double> normal(const Vec3<double>&) const;
+};

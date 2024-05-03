@@ -66,6 +66,10 @@ Scene::Scene(std::ifstream is) {
             Vec3<double> size;
             is >> size;
             objs.back().geometry = std::make_unique<Box>(size);
+        } else if (token == "TRIANGLE") {
+            Mat3<double> v;
+            is >> v.x >> v.y >> v.z;
+            objs.back().geometry = std::make_unique<Triangle>(v);
         } else if (token == "METALLIC") {
             auto color = objs.back().material->color;
             objs.back().material = std::make_unique<Metallic>();
@@ -87,6 +91,8 @@ Scene::Scene(std::ifstream is) {
                 dists.push_back(std::make_unique<BoxDistribution>(t));
             } else if (auto t = std::dynamic_pointer_cast<Ellipsoid>(objs.back().geometry)) {
                 dists.push_back(std::make_unique<EllipsoidDistribution>(t));
+            } else if (auto t = std::dynamic_pointer_cast<Triangle>(objs.back().geometry)) {
+                dists.push_back(std::make_unique<TriangleDistribution>(t));
             }
 
         } else {
@@ -154,7 +160,6 @@ Vec3<double> Scene::raycast(const Ray& ray, int ttl) const {
         auto raycast_fn = std::bind(&Scene::raycast, this, _1, ttl - 1);
         return obj.material->sample(ray, intersect, raycast_fn);
     } else {
-        std::cerr << "No intersections\n";
         return bg_color;
     }
 }

@@ -89,6 +89,12 @@ struct EllipsoidDistribution : public LightDistribution<Ellipsoid> {
     double pdf_(const Vec3<double> &pos);
 };
 
+struct TriangleDistribution : public LightDistribution<Triangle> {
+    TriangleDistribution(std::shared_ptr<Triangle> b);
+    ~TriangleDistribution();
+    Vec3<double> sample_();
+    double pdf_(const Vec3<double> &pos);
+};
 
 struct MixedDistribution : public Distribution {
     std::vector<std::unique_ptr<Distribution>> dists;
