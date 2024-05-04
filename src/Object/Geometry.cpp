@@ -21,4 +21,3 @@ std::vector<Intersection> Geometry::get_intersect(Ray ray) const {
 bool Geometry::is_inside(const Ray &ray, double t) const {
     return ray.v % normal(ray.reveal(t)) >= 0;
 }
-

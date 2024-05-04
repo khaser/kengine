@@ -8,7 +8,9 @@
 #include <utility>
 
 Triangle::Triangle(const Mat3<double> &cords)
-    : vert(cords), v(cords.y - cords.x), u(cords.z - cords.x) { }
+    : vert(cords), v(cords.y - cords.x), u(cords.z - cords.x) {
+    shift = (cords.x + cords.y + cords.z) / 3;
+}
 
 Vec3<double> Triangle::normal(const Vec3<double>& p) const {
     return (v ^ u).norm();
@@ -34,3 +36,7 @@ std::vector<double> Triangle::get_intersect_(const Ray& ray) const {
     }
 };
 
+Box Triangle::AABB() const {
+    auto gvert = Mat3<double>(position) + rotation * vert;
+    return Box(min(gvert.x, min(gvert.y, gvert.z)), max(max(gvert.x, gvert.y), gvert.z));
+}

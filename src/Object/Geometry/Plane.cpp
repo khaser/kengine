@@ -17,3 +17,6 @@ std::vector<double> Plane::get_intersect_(const Ray& ray) const {
     return res;
 };
 
+Box Plane::AABB() const {
+    return Box({0, 0, 0}, position, rotation);
+}

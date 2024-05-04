@@ -16,6 +16,11 @@ struct Mat3 {
         return x * v.x + y * v.y + z * v.z;
     }
 
+    Mat3<T> operator+(const Mat3<T> &v) {
+        return {x + v.x, y + v.y, z + v.z};
+    }
+
+
     T det() {
         return x.x * y.y * z.z
               -x.x * y.z * z.y

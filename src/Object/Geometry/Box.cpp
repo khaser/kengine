@@ -6,6 +6,9 @@
 
 Box::Box(const Vec3<double> &v) : size(v) {}
 
+Box::Box(const Vec3<double> &size, const Vec3<double> &position, const Quaternion &rotation) : Geometry(position, rotation), size(size) {}
+Box::Box(const Vec3<double> &aa, const Vec3<double> &bb) : Geometry((bb + aa) / 2, {}), size((bb - aa) / 2) {}
+
 Vec3<double> Box::normal(const Vec3<double>& p) const {
     auto v = p / size;
     Vec3<double> av = {fabs(v.x), fabs(v.y), fabs(v.z)};
@@ -35,3 +38,24 @@ std::vector<double> Box::get_intersect_(const Ray& ray) const {
     }
 };
 
+Box Box::AABB() const {
+    return *this;
+}
+
+Box Box::operator|(const Geometry& oth) const {
+    auto a = AABB();
+    auto b = oth.AABB();
+    return Box(min(a.Min(), b.Min()), max(a.Max(), b.Max()));
+}
+
+Vec3<double> Box::Min() const {
+    return position + rotation * -size;
+}
+
+Vec3<double> Box::Max() const {
+    return position + rotation * size;
+}
+
+void Box::bump() {
+    size = size + 1e-2;
+}

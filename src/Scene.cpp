@@ -7,13 +7,16 @@
 #include "Scene.h"
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <fstream>
+#include <thread>
 #include <utility>
 #include <type_traits>
 #include <string>
 #include <memory>
 #include <vector>
+#include <atomic>
 
 using namespace std::placeholders;
 
@@ -114,7 +117,19 @@ Scene::Scene(std::ifstream is) {
 
 std::vector<std::vector<Vec3<double>>> Scene::render_scene() {
     std::vector<std::vector<Vec3<double>>> output(dimensions.second, std::vector<Vec3<double>>(dimensions.first));
-#pragma omp parallel for
+    std::atomic_size_t samples_processed = 0;
+    size_t samples_total = dimensions.first * dimensions.second * samples;
+#pragma omp parallel
+    {
+#pragma omp single nowait
+    {
+    while (samples_processed != samples_total) {
+        std::cerr << samples_processed << ' ' << samples_total << std::endl;
+        std::cerr << "Generated " << std::fixed << std::setprecision(4) << 100 * 1.0 * samples_processed / samples_total << "% of samples\n";
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+    }
+#pragma omp for schedule(dynamic)
     for (uint16_t x = 0; x < dimensions.first; ++x) {
         for (uint16_t y = 0; y < dimensions.second; ++y) {
             Vec3<double> pixel = {0, 0, 0};
@@ -124,10 +139,12 @@ std::vector<std::vector<Vec3<double>>> Scene::render_scene() {
                 double x_11 = x_01 * 2 - 1;
                 double y_11 = y_01 * 2 - 1;
                 pixel = pixel + raycast(camera.raycast(x_11, -y_11), ray_depth);
+                samples_processed++;
             }
             output[y][x] = postprocess(pixel / samples);
         }
     }
+    } // omp parallel
     return output;
 }
 

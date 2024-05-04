@@ -26,3 +26,7 @@ std::vector<double> Ellipsoid::get_intersect_(const Ray& ray) const {
     if (t2 > 0) res.push_back(t2);
     return res;
 };
+
+Box Ellipsoid::AABB() const {
+    return Box(r, position, rotation);
+}

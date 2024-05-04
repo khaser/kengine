@@ -57,6 +57,16 @@ struct Vec3 {
         return (*this) * (1.0 / len());
     }
 
+    Vec3<T> maj() const {
+        if (x >= y && x >= z) {
+            return {1, 0, 0};
+        } else if (y >= x && y >= z) {
+            return {0, 1, 0};
+        } else {
+            return {0, 0, 1};
+        }
+    }
+
     Vec3<T> clamp(const Vec3<T> &Min, const Vec3<T> &Max) const {
         return { std::clamp(x, Min.x, Max.x), std::clamp(y, Min.y, Max.y), std::clamp(z, Min.z, Max.z) };
     }
