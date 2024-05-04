@@ -7,13 +7,14 @@
 #include "Camera.h"
 #include "Object.h"
 #include "Primitives.h"
+#include "BVH.h"
 
 struct Scene {
     std::pair<uint16_t, uint16_t> dimensions;
     Vec3<double> bg_color;
     Vec3<double> ambient_light;
     Camera camera;
-    std::vector<Object> objs;
+    BVH geometry;
 
     int ray_depth;
     uint16_t samples;

@@ -20,6 +20,7 @@ using namespace std::placeholders;
 Scene::Scene(std::ifstream is) {
 
     std::string token;
+    std::vector<Object> objs;
     std::vector<std::unique_ptr<Distribution>> dists;
     dists.push_back(std::make_unique<CosineDistribution>());
 
@@ -106,6 +107,8 @@ Scene::Scene(std::ifstream is) {
             t->dist = dist;
         }
     }
+
+    geometry = BVH(std::move(objs));
 }
 
 
@@ -165,14 +168,5 @@ Vec3<double> Scene::raycast(const Ray& ray, int ttl) const {
 }
 
 std::optional<std::pair<Object, Intersection>> Scene::get_intersect(const Ray& ray) const {
-    std::optional<std::pair<Object, Intersection>> bound;
-    for (auto& obj : objs) {
-        std::vector<Intersection> obj_intersections = obj.geometry->get_intersect(ray);
-        for (auto &inter : obj_intersections) {
-            if (!bound || bound.value().second.t > inter.t) {
-                bound = {{obj, inter}};
-            }
-        }
-    }
-    return bound;
+    return geometry.get_intersect(ray);
 }

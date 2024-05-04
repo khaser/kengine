@@ -24,24 +24,27 @@ struct Plane : public Geometry {
     Vec3<double> norm;
     Plane(const Vec3<double>&);
     virtual ~Plane() {};
-    std::vector<double> get_intersect_(const Ray&) const;
     Vec3<double> normal(const Vec3<double>&) const;
+private:
+    std::vector<double> get_intersect_(const Ray&) const;
 };
 
 struct Ellipsoid : public Geometry {
     Vec3<double> r;
     Ellipsoid(const Vec3<double>&);
     virtual ~Ellipsoid() {};
-    std::vector<double> get_intersect_(const Ray&) const;
     Vec3<double> normal(const Vec3<double>&) const;
+private:
+    std::vector<double> get_intersect_(const Ray&) const;
 };
 
 struct Box : public Geometry {
     Vec3<double> size;
     Box(const Vec3<double>&);
     virtual ~Box() {};
-    std::vector<double> get_intersect_(const Ray&) const;
     Vec3<double> normal(const Vec3<double>&) const;
+private:
+    std::vector<double> get_intersect_(const Ray&) const;
 };
 
 struct Triangle : public Geometry {
@@ -49,6 +52,7 @@ struct Triangle : public Geometry {
     Vec3<double> u, v;
     Triangle(const Mat3<double>&);
     virtual ~Triangle() {};
-    std::vector<double> get_intersect_(const Ray&) const;
     Vec3<double> normal(const Vec3<double>&) const;
+private:
+    std::vector<double> get_intersect_(const Ray&) const;
 };

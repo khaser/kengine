@@ -26,7 +26,7 @@
 
           autocmd filetype cpp map <silent> <F1> :!export CMAKE_BUILD_TYPE=Debug && ./build.sh <CR>
           let &path.="include,src,${pkgs.glibc.dev}/include"
-          let g:ycm_clangd_binary_path = '${pkgs.clang-tools}/bin/clangd'
+          let g:ycm_clangd_binary_path = '${pkgs.clang-tools_16}/bin/clangd'
         '';
       });
     in {
@@ -35,7 +35,6 @@
 
         nativeBuildInputs = with pkgs; [
           configured-vim
-          clang-tools # clangd(language server)
           cmake
           xxd
           gdb
