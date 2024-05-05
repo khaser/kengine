@@ -47,14 +47,25 @@ private:
             return std::nullopt;
         }
 
-        auto res = found_inters(ranges::subrange(objs.begin(), bvh_end) | drop(node.start) | take(node.len), ray);
+        auto res = found_inters(ranges::subrange(objs.begin() + node.start, bvh_end) | take(node.len), ray);
 
-        for (const ssize_t &child : {node.left, node.right}) {
-            auto aabb_inter = node.aabb.get_intersect(ray);
-            if (child != -1 &&
-                    (!early_out ||
-                     !res.has_value() ||
-                     ranges::min_element(aabb_inter, {}, &Intersection::t)->t < res->second.t)) {
+        std::array<std::pair<ssize_t, std::optional<Intersection>>, 2> childs;
+        // select better child traversal
+        {
+            auto left_inters = (node.left == -1 ? std::vector<Intersection>() : tree[node.left].aabb.get_intersect(ray));
+            auto right_inters = (node.right == -1 ? std::vector<Intersection>() : tree[node.right].aabb.get_intersect(ray));
+            auto left_first = (left_inters.empty() ? std::nullopt : std::make_optional(ranges::min(left_inters, {}, &Intersection::t)));
+            auto right_first = (right_inters.empty() ? std::nullopt : std::make_optional(ranges::min(right_inters, {}, &Intersection::t)));
+            if (inter_cmp(left_first, right_first)) {
+                childs = {std::make_pair(node.left, left_first), std::make_pair(node.right, right_first)};
+            } else {
+                childs = {std::make_pair(node.right, right_first), std::make_pair(node.left, left_first)};
+            }
+        }
+
+        for (const auto &[child, aabb_inter] : childs) {
+            if (child == -1) continue;
+            if (!early_out || !res.has_value() || inter_cmp(aabb_inter, res->second)) {
                 res = better(res, get_intersect_(child, ray, early_out));
             }
         }
@@ -81,8 +92,6 @@ private:
                     return std::make_pair(obj, *it);
                 }
             });
-        /* std::vector<resT> inters(node_inters_rng.begin(), node_inters_rng.end()); */
-        /* return *std::min_element(inters.begin(), inters.end(), res_cmp); */
         return *ranges::min_element(node_inters_rng, res_cmp);
     }
 
@@ -90,6 +99,12 @@ private:
         if (!a.has_value()) return false;
         if (!b.has_value()) return true;
         return a->second.t < b->second.t;
+    };
+
+    static bool inter_cmp(const std::optional<Intersection> &a, const std::optional<Intersection> &b) {
+        if (!a.has_value()) return false;
+        if (!b.has_value()) return true;
+        return a->t < b->t;
     };
 
     template <class RandomIt>
@@ -109,7 +124,6 @@ private:
         }
 
         auto pivot = end;
-        node_aabb.bump();
         while (true) {
             pivot = std::partition(begin, end, [&node_aabb] (const Object &obj) {
                 auto sel = node_aabb.size.maj();
