@@ -1,7 +1,7 @@
 # TODOs list:
 
 ## Performance:
-* add early out heuristic
+* add early out heuristic (implemented, but not tested)
 * SAH bvh build
 * reorder Node values to increase cache-hit
 

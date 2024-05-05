@@ -185,5 +185,5 @@ Vec3<double> Scene::raycast(const Ray& ray, int ttl) const {
 }
 
 std::optional<std::pair<Object, Intersection>> Scene::get_intersect(const Ray& ray) const {
-    return geometry.get_intersect(ray);
+    return geometry.get_intersect(ray, true);
 }
