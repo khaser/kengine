@@ -25,6 +25,8 @@ Scene::Scene(std::ifstream is) {
     std::string token;
     std::vector<Object> objs;
     std::vector<std::unique_ptr<Distribution>> dists;
+
+    // TODO: move to dists method
     dists.push_back(std::make_unique<CosineDistribution>());
 
     while (is >> token) {
@@ -111,7 +113,7 @@ Scene::Scene(std::ifstream is) {
         }
     }
 
-    geometry = BVH(std::move(objs));
+    geometry = std::make_unique<BVH_bounds>(std::nullopt, std::move(objs));
 }
 
 
@@ -185,5 +187,5 @@ Vec3<double> Scene::raycast(const Ray& ray, int ttl) const {
 }
 
 std::optional<std::pair<Object, Intersection>> Scene::get_intersect(const Ray& ray) const {
-    return geometry.get_intersect(ray, true);
+    return geometry->get_intersect(ray, true);
 }

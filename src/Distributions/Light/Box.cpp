@@ -6,7 +6,7 @@
 typedef Vec3<double> vec3;
 
 BoxDistribution::BoxDistribution(std::shared_ptr<Box> b) : LightDistribution(b) {
-    auto &[x, y, z] = geom->size;
+    auto &[x, y, z] = geometry->size;
     faces = {y * z, x * z, x * y};
     faces = faces * 4;
     faces_square = 2 * (faces.x + faces.y + faces.z);
@@ -16,7 +16,7 @@ BoxDistribution::~BoxDistribution() {};
 
 vec3 BoxDistribution::sample_() {
     Rnd* rnd = Rnd::getRnd();
-    auto &[x, y, z] = geom->size;
+    auto &[x, y, z] = geometry->size;
 
     vec3 u = {rnd->uniform(-x, x), rnd->uniform(-y, y), rnd->uniform(-z, z)};
     double pick_dim = rnd->uniform(0.0, faces.x + faces.y + faces.z);

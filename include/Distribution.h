@@ -22,6 +22,7 @@ struct Distribution {
 };
 
 
+// Not used now
 struct UniformDistribution : public Distribution {
     UniformDistribution();
     ~UniformDistribution();
@@ -40,12 +41,12 @@ struct CosineDistribution : public Distribution {
 
 template<typename T>
 struct LightDistribution : public Distribution {
-    std::shared_ptr<T> geom;
-    LightDistribution(std::shared_ptr<T> geom) : geom(geom), Distribution() {}
+    std::shared_ptr<T> geometry;
+    LightDistribution(std::shared_ptr<T> geom) : geometry(geom), Distribution() {}
     ~LightDistribution() {}
 
     Vec3<double> sample(const Vec3<double> &pos, const Vec3<double>&) {
-        Vec3<double> x = geom->position + geom->rotation * sample_();
+        Vec3<double> x = geometry->position + geometry->rotation * sample_();
         return (x - pos).norm();
     }
 
@@ -53,8 +54,8 @@ struct LightDistribution : public Distribution {
     double pdf(const Vec3<double> &pos, const Vec3<double> &n, const Vec3<double> &d) {
         double res = 0;
         Ray r = {pos, d};
-        for (Intersection &obj_inter : geom->get_intersect(r)) {
-            double tmp = pdf_(-geom->rotation * (r.reveal(obj_inter.t) - geom->position));
+        for (Intersection &obj_inter : geometry->get_intersect(r)) {
+            double tmp = pdf_(-geometry->rotation * (r.reveal(obj_inter.t) - geometry->position));
             if (tmp == 0) {
                 throw std::logic_error("zero probability density by point");
             }

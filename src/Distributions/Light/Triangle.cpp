@@ -18,10 +18,10 @@ vec3 TriangleDistribution::sample_() {
         y = 1 - y;
     }
     vec3 bari = vec3 {1 - x - y, x, y};
-    return geom->vert * bari;
+    return geometry->vert * bari;
 }
 
 double TriangleDistribution::pdf_(const Vec3<double>&) {
-    double square = 0.5 * (geom->u ^ geom->v).len();
+    double square = 0.5 * (geometry->u ^ geometry->v).len();
     return 1 / square;
 }
