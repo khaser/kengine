@@ -115,7 +115,7 @@ ssize_t BVH::build_bvh(std::vector<Object>::iterator begin, std::vector<Object>:
     if (end - begin <= term_size) {
         node_aabb.bump();
         /* std::cerr << "Create term node with " << end - begin << " objects\n"; */
-        tree.emplace_back(begin - objs.begin(), end - begin, -1, -1, node_aabb);
+        tree.push_back({begin - objs.begin(), end - begin, -1, -1, node_aabb});
         return tree.size() - 1;
     }
 
@@ -137,6 +137,6 @@ ssize_t BVH::build_bvh(std::vector<Object>::iterator begin, std::vector<Object>:
     /* std::cerr << "Create split node: " << pivot - begin << " in left child, and " << end - pivot << " in right child\n"; */
     ssize_t L = build_bvh(begin, pivot);
     ssize_t R = build_bvh(pivot, end);
-    tree.emplace_back(begin - objs.begin(), 0, L, R, tree[L].aabb | tree[R].aabb);
+    tree.push_back({begin - objs.begin(), 0, L, R, tree[L].aabb | tree[R].aabb});
     return tree.size() - 1;
 }
