@@ -3,3 +3,4 @@ artifacts/
 .direnv/
 compile_commands.json
 logs/
+.gdb_history
