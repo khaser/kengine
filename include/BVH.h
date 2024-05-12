@@ -117,7 +117,7 @@ private:
     std::vector<Node> tree;
     int root_node; // may be -1 if bvh is empty
     F ini;
-    static const size_t term_size = 16;
+    static const size_t term_size = 1;
 };
 
 }

@@ -39,21 +39,32 @@ std::vector<double> Box::get_intersect_(const Ray& ray) const {
 };
 
 Box Box::AABB() const {
-    return *this;
+    Vec3<double> Min = position;
+    Vec3<double> Max = position;
+    for (double i = -1; i <= 1; i += 2) {
+        for (double j = -1; j <= 1; j += 2) {
+            for (double k = -1; k <= 1; k += 2) {
+                Vec3<double> pnt = position + rotation * (size * Vec3<double>{i, j, k});
+                Min = min(Min, pnt);
+                Max = max(Max, pnt);
+            }
+        }
+    }
+    return Box(Min, Max);
+}
+
+Vec3<double> Box::Min() const {
+    return position - size;
+}
+
+Vec3<double> Box::Max() const {
+    return position + size;
 }
 
 Box Box::operator|(const Geometry& oth) const {
     auto a = AABB();
     auto b = oth.AABB();
     return Box(min(a.Min(), b.Min()), max(a.Max(), b.Max()));
-}
-
-Vec3<double> Box::Min() const {
-    return position + rotation * -size;
-}
-
-Vec3<double> Box::Max() const {
-    return position + rotation * size;
 }
 
 void Box::bump() {
