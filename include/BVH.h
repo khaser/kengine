@@ -16,7 +16,7 @@ struct Node {
 
 namespace RawBVH {
 
-template<class T, class F, class Map, class Merge, class Geom>
+template<class T, class F, class Map, class Merge, class Geom, class EarlyOut>
 struct BVH {
 
 using objsIt = std::vector<T>::const_iterator;
@@ -45,7 +45,9 @@ private:
         F res = std::accumulate(node_inters.begin(), node_inters.end(), ini, Merge());
 
         for (const auto &child : {node.left, node.right}) {
-            res = Merge()(res, get_intersect_(child, ray, early_out));
+            if (!EarlyOut() (ray, res, tree[child])) {
+                res = Merge()(res, get_intersect_(child, ray, early_out));
+            }
         }
         return res;
 

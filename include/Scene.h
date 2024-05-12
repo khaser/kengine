@@ -13,18 +13,16 @@ namespace BVH_bounds {
 using T = Object;
 using F = std::optional<std::pair<Object, Intersection>>;
 
+std::optional<Intersection> best_inter(std::shared_ptr<Geometry> geom, const Ray &r);
+
 struct Map {
     Map (const Ray &ray) : ray(ray) {};
     F operator() (const T& obj) const {
-        std::vector<Intersection> inters = obj.geometry->get_intersect(ray);
-        auto it = std::min_element(inters.begin(), inters.end(),
-            [] (const auto &a, const auto &b) {
-                return a.t < b.t;
-            });
-        if (it == inters.end()) {
-            return std::nullopt;
+        auto res = best_inter(obj.geometry, ray);
+        if (res) {
+            return std::make_pair(obj, *res);
         } else {
-            return std::make_pair(obj, *it);
+            return std::nullopt;
         }
     }
     const Ray ray;
@@ -44,7 +42,18 @@ struct Geom {
     }
 };
 
-using BVH = RawBVH::BVH<T, F, Map, Merge, Geom>;
+struct EarlyOut {
+    bool operator() (const Ray& r, const F &res, const Node &node) const {
+        // TODO: remove
+        /* return false; */
+        if (!res) return false;
+        auto inter = best_inter(std::make_shared<Box>(node.aabb), r);
+        if (!inter) return true;
+        return res->second.t < inter->t;
+    }
+};
+
+using BVH = RawBVH::BVH<T, F, Map, Merge, Geom, EarlyOut>;
 
 }; // namespace BVH_bounds
 
