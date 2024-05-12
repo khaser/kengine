@@ -121,12 +121,18 @@ struct Geom {
 };
 
 struct EarlyOut {
-    bool operator() (const Ray& r, const double &res, const Node &node) const {
+    bool operator() (const Ray& r, const double &res, const Node *node) const {
         return false;
     }
 };
 
-using BVH = RawBVH::BVH<T, double, Map, std::plus<double>, Geom, EarlyOut>;
+struct Traverse {
+    std::vector<Node*> operator() (const Ray& r, const Node* node) const {
+        return {node->left, node->right};
+    }
+};
+
+using BVH = RawBVH::BVH<T, double, Map, std::plus<double>, Geom, EarlyOut, Traverse>;
 
 } // namespace BVH_light
 

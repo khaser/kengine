@@ -43,17 +43,21 @@ struct Geom {
 };
 
 struct EarlyOut {
-    bool operator() (const Ray& r, const F &res, const Node &node) const {
-        // TODO: remove
-        /* return false; */
+    bool operator() (const Ray& r, const F &res, const Node *node) const {
         if (!res) return false;
-        auto inter = best_inter(std::make_shared<Box>(node.aabb), r);
+        auto inter = best_inter(std::make_shared<Box>(node->aabb), r);
         if (!inter) return true;
         return res->second.t < inter->t;
     }
 };
 
-using BVH = RawBVH::BVH<T, F, Map, Merge, Geom, EarlyOut>;
+struct Traverse {
+    std::vector<Node*> operator() (const Ray& r, const Node* node) const {
+        return {node->left, node->right};
+    }
+};
+
+using BVH = RawBVH::BVH<T, F, Map, Merge, Geom, EarlyOut, Traverse>;
 
 }; // namespace BVH_bounds
 

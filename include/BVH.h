@@ -9,14 +9,14 @@
 struct Node {
     ssize_t start;
     ssize_t len;
-    ssize_t left;
-    ssize_t right;
+    Node *left;
+    Node *right;
     Box aabb;
 };
 
 namespace RawBVH {
 
-template<class T, class F, class Map, class Merge, class Geom, class EarlyOut>
+template<class T, class F, class Map, class Merge, class Geom, class EarlyOut, class Traverse>
 struct BVH {
 
 using objsIt = std::vector<T>::const_iterator;
@@ -24,28 +24,27 @@ using objsIt = std::vector<T>::const_iterator;
 public:
     BVH() {};
     BVH(F ini, objsIt begin, objsIt end) : ini(ini), objs(begin, end) {
+        tree.reserve(objs.end() - objs.begin()); // prevent reallocations to make dirty hacks in build work
         root_node = build_bvh(objs.begin(), objs.end());
     }
 
     F get_intersect(const Ray& ray, bool early_out) const {
+        if (root_node == NULL) return ini;
         return get_intersect_(root_node, ray, early_out);
     }
 
 private:
-    F get_intersect_(ssize_t node_idx, const Ray& ray, bool early_out) const {
-        if (node_idx == -1) return ini;
-        const Node &node = tree[node_idx];
-
-        if (node.aabb.get_intersect(ray).empty()) {
+    F get_intersect_(const Node *node, const Ray& ray, bool early_out) const {
+        if (node->aabb.get_intersect(ray).empty()) {
             return ini;
         }
 
         std::vector<F> node_inters;
-        std::transform(objs.begin() + node.start, objs.begin() + node.start + node.len, std::back_inserter(node_inters), Map(ray));
+        std::transform(objs.begin() + node->start, objs.begin() + node->start + node->len, std::back_inserter(node_inters), Map(ray));
         F res = std::accumulate(node_inters.begin(), node_inters.end(), ini, Merge());
 
-        for (const auto &child : {node.left, node.right}) {
-            if (!EarlyOut() (ray, res, tree[child])) {
+        for (Node* child : Traverse() (ray, node)) {
+            if (child != NULL && !(EarlyOut() (ray, res, child))) {
                 res = Merge()(res, get_intersect_(child, ray, early_out));
             }
         }
@@ -64,19 +63,10 @@ private:
         /*         childs = {std::make_pair(node.right, right_first), std::make_pair(node.left, left_first)}; */
         /*     } */
         /* } */
-
-        /* for (const auto &[child, aabb_inter] : childs) { */
-        /*     if (child == -1) continue; */
-        /*     if (!early_out || !res.has_value() || inter_cmp(aabb_inter, res->second)) { */
-        /*         res = Merge(res, get_intersect_(child, ray, early_out)); */
-        /*     } */
-        /* } */
-
-        /* return res; */
     }
 
-    ssize_t build_bvh(std::vector<T>::iterator begin, std::vector<T>::iterator end) {
-        if (begin == end) return -1;
+    Node* build_bvh(std::vector<T>::iterator begin, std::vector<T>::iterator end) {
+        if (begin == end) return NULL;
         Box node_aabb = std::transform_reduce(begin + 1, end,
             (Geom() (*begin))->AABB(),
             [] (const Box& a, const Box& b) {
@@ -87,8 +77,8 @@ private:
         if (end - begin <= term_size) {
             node_aabb.bump();
             /* std::cerr << "Create term node with " << end - begin << " objects\n"; */
-            tree.push_back({begin - objs.begin(), end - begin, -1, -1, node_aabb});
-            return tree.size() - 1;
+            tree.push_back({begin - objs.begin(), end - begin, NULL, NULL, node_aabb});
+            return &tree.back();
         }
 
         auto pivot = end;
@@ -107,16 +97,16 @@ private:
         }
 
         /* std::cerr << "Create split node: " << pivot - begin << " in left child, and " << end - pivot << " in right child\n"; */
-        ssize_t L = build_bvh(begin, pivot);
-        ssize_t R = build_bvh(pivot, end);
-        tree.push_back({begin - objs.begin(), 0, L, R, tree[L].aabb | tree[R].aabb});
-        return tree.size() - 1;
+        Node *L = build_bvh(begin, pivot);
+        Node *R = build_bvh(pivot, end);
+        tree.push_back({begin - objs.begin(), 0, L, R, L->aabb | R->aabb});
+        return &tree.back();
     }
 
 private:
     std::vector<T> objs;
     std::vector<Node> tree;
-    int root_node; // may be -1 if bvh is empty
+    Node *root_node;
     F ini;
     static const size_t term_size = 8;
 };
