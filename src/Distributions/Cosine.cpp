@@ -15,6 +15,6 @@ vec3 CosineDistribution::sample(const vec3 &pos, const vec3 &n) {
     return res.norm();
 }
 
-double CosineDistribution::pdf(const vec3 &pos, const vec3 &n, const vec3 &d) {
+double CosineDistribution::pdf(const vec3 &pos, const vec3 &n, const vec3 &d) const {
     return std::max(0.0, d % n / M_PI);
 }

@@ -1,5 +1,6 @@
 #pragma once
-#include "Primitives.h"
+
+#include "Primitives/Ray.h"
 #include "Object.h"
 
 #include <vector>
@@ -13,39 +14,37 @@ struct Node {
     Box aabb;
 };
 
-template<class T, class F, class Map, class Merge>
+namespace RawBVH {
+
+template<class T, class F, class Map, class Merge, class Geom>
 struct BVH {
 
 using objsIt = std::vector<T>::const_iterator;
 
 public:
     BVH() {};
-    BVH(F ini, std::vector<T> &&objs_arg) : ini(ini), objs(objs_arg) {
-        // TODO: move planes processing into Scene, bvh shouldn't care about it
-        bvh_end = std::partition(objs.begin(), objs.end(), [] (const T& obj) -> bool {
-            return dynamic_pointer_cast<Plane>(obj.geometry) == 0;
-        });
-
-        root_node = build_bvh(objs.begin(), bvh_end);
+    BVH(F ini, objsIt begin, objsIt end) : ini(ini), objs(begin, end) {
+        root_node = build_bvh(objs.begin(), objs.end());
     }
 
     F get_intersect(const Ray& ray, bool early_out) const {
-        F oth_inter = found_inters(bvh_end, objs.end(), ray);
-        return Merge() (oth_inter, get_intersect_(root_node, ray, early_out));
+        return get_intersect_(root_node, ray, early_out);
     }
 
 private:
     F get_intersect_(ssize_t node_idx, const Ray& ray, bool early_out) const {
+        if (node_idx == -1) return ini;
         const Node &node = tree[node_idx];
 
         if (node.aabb.get_intersect(ray).empty()) {
-            return std::nullopt;
+            return ini;
         }
 
-        F res = found_inters(objs.begin() + node.start, objs.begin() + node.start + node.len, ray);
+        std::vector<F> node_inters;
+        std::transform(objs.begin() + node.start, objs.begin() + node.start + node.len, std::back_inserter(node_inters), Map(ray));
+        F res = std::accumulate(node_inters.begin(), node_inters.end(), ini, Merge());
 
         for (const auto &child : {node.left, node.right}) {
-            if (child == -1) continue;
             res = Merge()(res, get_intersect_(child, ray, early_out));
         }
         return res;
@@ -75,19 +74,14 @@ private:
         /* return res; */
     }
 
-    F found_inters(objsIt begin, objsIt end, const Ray& ray) const {
-        std::vector<F> node_inters;
-        std::transform(begin, end, std::back_inserter(node_inters), Map(ray));
-        return std::accumulate(node_inters.begin(), node_inters.end(), ini, Merge());
-    }
-
     ssize_t build_bvh(std::vector<T>::iterator begin, std::vector<T>::iterator end) {
+        if (begin == end) return -1;
         Box node_aabb = std::transform_reduce(begin + 1, end,
-            begin->geometry->AABB(),
+            (Geom() (*begin))->AABB(),
             [] (const Box& a, const Box& b) {
                 return a | b;
             },
-            [] (const T& obj) { return obj.geometry->AABB(); }
+            [] (const T& obj) { return (Geom() (obj))->AABB(); }
         );
         if (end - begin <= term_size) {
             node_aabb.bump();
@@ -100,7 +94,7 @@ private:
         while (true) {
             pivot = std::partition(begin, end, [&node_aabb] (const T &obj) {
                 auto sel = node_aabb.size.maj();
-                return obj.geometry->mid() % sel > node_aabb.position % sel;
+                return (Geom() (obj))->mid() % sel > node_aabb.position % sel;
             });
             if (pivot == begin) {
                 node_aabb = Box(node_aabb.Min(), node_aabb.Max() - node_aabb.size.maj() * node_aabb.size);
@@ -120,9 +114,10 @@ private:
 
 private:
     std::vector<T> objs;
-    std::vector<T>::iterator bvh_end;
     std::vector<Node> tree;
-    int root_node;
+    int root_node; // may be -1 if bvh is empty
     F ini;
     static const size_t term_size = 16;
 };
+
+}

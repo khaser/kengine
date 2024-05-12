@@ -6,7 +6,7 @@
 typedef Vec3<double> vec3;
 
 TriangleDistribution::TriangleDistribution(std::shared_ptr<Triangle> geom)
-    : LightDistribution(geom) {};
+    : LightDistribution(geom), tr(geom) {};
 
 TriangleDistribution::~TriangleDistribution() {};
 
@@ -18,10 +18,10 @@ vec3 TriangleDistribution::sample_() {
         y = 1 - y;
     }
     vec3 bari = vec3 {1 - x - y, x, y};
-    return geometry->vert * bari;
+    return tr->vert * bari;
 }
 
-double TriangleDistribution::pdf_(const Vec3<double>&) {
-    double square = 0.5 * (geometry->u ^ geometry->v).len();
+double TriangleDistribution::pdf_(const Vec3<double>&) const {
+    double square = 0.5 * (tr->u ^ tr->v).len();
     return 1 / square;
 }

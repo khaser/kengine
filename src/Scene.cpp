@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <fstream>
+#include <optional>
 #include <thread>
 #include <utility>
 #include <type_traits>
@@ -19,15 +20,13 @@
 #include <atomic>
 
 using namespace std::placeholders;
+using namespace BVH_bounds;
 
 Scene::Scene(std::ifstream is) {
 
     std::string token;
     std::vector<Object> objs;
-    std::vector<std::unique_ptr<Distribution>> dists;
-
-    // TODO: move to dists method
-    dists.push_back(std::make_unique<CosineDistribution>());
+    std::vector<std::shared_ptr<LightDistribution>> dists;
 
     while (is >> token) {
         if (token == "DIMENSIONS") {
@@ -106,14 +105,19 @@ Scene::Scene(std::ifstream is) {
         }
     }
 
-    auto dist = std::make_shared<MixedDistribution>(std::move(dists));
+    light_pdf = std::make_unique<MixedDistribution>(std::move(dists));
     for (auto &obj : objs) {
         if (auto t = dynamic_pointer_cast<Diffuse>(obj.material)) {
-            t->dist = dist;
+            t->dist = light_pdf.get();
         }
     }
 
-    geometry = std::make_unique<BVH_bounds>(std::nullopt, std::move(objs));
+    auto bvh_end = std::partition(objs.begin(), objs.end(), [] (const T& obj) -> bool {
+        return dynamic_pointer_cast<Plane>(obj.geometry) == 0;
+    });
+
+    non_bvh_objs = std::vector(bvh_end, objs.end());
+    bvh = BVH(std::nullopt, objs.begin(), bvh_end);
 }
 
 
@@ -187,5 +191,8 @@ Vec3<double> Scene::raycast(const Ray& ray, int ttl) const {
 }
 
 std::optional<std::pair<Object, Intersection>> Scene::get_intersect(const Ray& ray) const {
-    return geometry->get_intersect(ray, true);
+    std::vector<F> node_inters;
+    std::transform(non_bvh_objs.begin() , non_bvh_objs.end(), std::back_inserter(node_inters), Map(ray));
+    F non_bvh_inter = std::accumulate(node_inters.begin(), node_inters.end(), static_cast<F>(std::nullopt), Merge());
+    return Merge() (non_bvh_inter, bvh.get_intersect(ray, true));
 }

@@ -17,6 +17,6 @@ vec3 UniformDistribution::sample(const vec3 &pos, const vec3 &n) {
     return res;
 }
 
-double UniformDistribution::pdf(const vec3 &pos, const vec3 &n, const vec3 &d) {
+double UniformDistribution::pdf(const vec3 &pos, const vec3 &n, const vec3 &d) const {
     return (d % n > 0 ? 1 / (M_PI * 2) : 0);
 }

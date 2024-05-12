@@ -15,7 +15,7 @@ struct Material {
 
 struct Diffuse : public Material {
     Vec3<double> emission;
-    std::shared_ptr<Distribution> dist;
+    Distribution *dist;
     Vec3<double> sample(Ray w_in, Intersection i,
                             const std::function<Vec3<double>(const Ray&)> &raycast);
 };

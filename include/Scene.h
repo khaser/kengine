@@ -9,7 +9,7 @@
 #include "Primitives.h"
 #include "BVH.h"
 
-namespace {
+namespace BVH_bounds {
 using T = Object;
 using F = std::optional<std::pair<Object, Intersection>>;
 
@@ -38,16 +38,26 @@ struct Merge {
     }
 };
 
-using BVH_bounds = BVH<T, F, Map, Merge>;
-
+struct Geom {
+    std::shared_ptr<Geometry> operator() (const T &a) const {
+        return a.geometry;
+    }
 };
+
+using BVH = RawBVH::BVH<T, F, Map, Merge, Geom>;
+
+}; // namespace BVH_bounds
 
 struct Scene {
     std::pair<uint16_t, uint16_t> dimensions;
     Vec3<double> bg_color;
     Vec3<double> ambient_light;
     Camera camera;
-    std::unique_ptr<BVH_bounds> geometry;
+
+    BVH_bounds::BVH bvh;
+    std::vector<Object> non_bvh_objs;
+
+    std::unique_ptr<MixedDistribution> light_pdf;
 
     int ray_depth;
     uint16_t samples;
