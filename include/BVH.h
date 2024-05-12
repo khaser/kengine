@@ -49,7 +49,6 @@ private:
         }
         return res;
 
-        // TODO: restore selection better child traversal
         /* { */
         /*     auto first_inter_by_idx = [&] (ssize_t idx) { */
         /*         return best_inter(idx == -1 ? std::vector<Intersection>() : tree[idx].aabb.get_intersect(ray)); */
@@ -117,7 +116,7 @@ private:
     std::vector<Node> tree;
     int root_node; // may be -1 if bvh is empty
     F ini;
-    static const size_t term_size = 1;
+    static const size_t term_size = 8;
 };
 
 }
