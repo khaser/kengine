@@ -4,7 +4,7 @@
 #include "Distribution.h"
 #include <memory>
 
-typedef Vec3<double> vec3;
+typedef Vec3<float> vec3;
 
 MixedDistribution::MixedDistribution(std::vector<std::shared_ptr<LightDistribution>> &&dists_) {
     bvh = BVH_light::BVH(0, dists_.cbegin(), dists_.cend());
@@ -22,8 +22,8 @@ vec3 MixedDistribution::sample(const vec3 &pos, const vec3 &n) {
     return dists[rnd->uniform_int(0, dists.size())]->sample(pos, n);
 }
 
-double MixedDistribution::pdf(const vec3 &pos, const vec3 &n, const vec3 &d) const {
-    double res = dists.back()->pdf(pos, n, d) + bvh.get_intersect({pos, d}, false);
+float MixedDistribution::pdf(const vec3 &pos, const vec3 &n, const vec3 &d) const {
+    float res = dists.back()->pdf(pos, n, d) + bvh.get_intersect({pos, d}, false);
     if (res == 0) throw std::logic_error("zero probability density by direction");
 
     return res / dists.size();

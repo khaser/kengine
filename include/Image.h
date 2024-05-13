@@ -12,7 +12,7 @@ struct Image {
     uint16_t width, height;
     std::vector<uint8_t> pixels;
 
-    Image(const std::vector<std::vector<Vec3<double>>> &img) : height(img.size()), width(img[0].size()) {
+    Image(const std::vector<std::vector<Vec3<float>>> &img) : height(img.size()), width(img[0].size()) {
         pixels.reserve(width * height * 3);
         for (auto &row : img) {
             for (auto &pixel : row) {

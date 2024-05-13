@@ -4,7 +4,7 @@
 #include <cmath>
 #include <algorithm>
 
-const double EPS = 1e-9;
+const float EPS = 1e-6;
 
 template<typename T>
 struct Vec3 {
@@ -50,7 +50,7 @@ struct Vec3 {
     Vec3<T> operator-() const {
         return {-x, -y, -z};
     }
-    double len() const {
+    float len() const {
         return sqrt(x * x + y * y + z * z);
     }
     Vec3<T> norm() const {
@@ -91,6 +91,6 @@ std::ostream& operator<<(std::ostream &os, const Vec3<T> &el) {
 }
 
 template<typename T>
-Vec3<T> pow(const Vec3<T> &v, double p) {
+Vec3<T> pow(const Vec3<T> &v, float p) {
     return { std::pow(v.x, p), std::pow(v.y, p), std::pow(v.z, p) };
 }

@@ -4,7 +4,7 @@
 #include "Distribution.h"
 #include <memory>
 
-typedef Vec3<double> vec3;
+typedef Vec3<float> vec3;
 
 BoxDistribution::BoxDistribution(std::shared_ptr<Box> b) : LightDistribution(b), box(b) {
     auto &[x, y, z] = box->size;
@@ -20,8 +20,8 @@ vec3 BoxDistribution::sample_() {
     auto &[x, y, z] = box->size;
 
     vec3 u = {rnd->uniform(-x, x), rnd->uniform(-y, y), rnd->uniform(-z, z)};
-    double pick_dim = rnd->uniform(0.0, faces.x + faces.y + faces.z);
-    double pick_front_back = rnd->bernoulli() ? 1 : -1;
+    float pick_dim = rnd->uniform(0.0, faces.x + faces.y + faces.z);
+    float pick_front_back = rnd->bernoulli() ? 1 : -1;
 
     if (pick_dim < faces.x) {
         return {x * pick_front_back, u.y, u.z};
@@ -32,6 +32,6 @@ vec3 BoxDistribution::sample_() {
     }
 }
 
-double BoxDistribution::pdf_(const vec3 &) const {
+float BoxDistribution::pdf_(const vec3 &) const {
     return 1 / faces_square;
 }

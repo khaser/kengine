@@ -3,8 +3,8 @@
 #include "Vec3.h"
 
 struct Intersection {
-    double t;
-    Vec3<double> normal;
+    float t;
+    Vec3<float> normal;
     bool is_inside;
 };
 

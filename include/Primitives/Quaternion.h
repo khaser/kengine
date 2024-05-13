@@ -4,8 +4,8 @@
 #include "Mat3.h"
 
 struct Quaternion {
-    Vec3<double> v = {0, 0, 0};
-    double w = 1;
+    Vec3<float> v = {0, 0, 0};
+    float w = 1;
     Quaternion operator*(const Quaternion& oth) const {
         return {v * oth.w + oth.v * w + (v ^ oth.v), w * oth.w - v % oth.v};
     }

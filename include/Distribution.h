@@ -17,8 +17,8 @@ struct Distribution {
 
     Distribution() : rnd(Rnd::getRnd()) {}
     virtual ~Distribution() {}
-    virtual Vec3<double> sample(const Vec3<double> &pos, const Vec3<double> &n) = 0;
-    virtual double pdf(const Vec3<double> &pos, const Vec3<double> &n, const Vec3<double> &d) const = 0;
+    virtual Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n) = 0;
+    virtual float pdf(const Vec3<float> &pos, const Vec3<float> &n, const Vec3<float> &d) const = 0;
 };
 
 #include "BVH.h"
@@ -27,16 +27,16 @@ struct Distribution {
 struct UniformDistribution : public Distribution {
     UniformDistribution();
     ~UniformDistribution();
-    Vec3<double> sample(const Vec3<double> &pos, const Vec3<double> &n);
-    double pdf(const Vec3<double> &pos, const Vec3<double> &n, const Vec3<double> &d) const;
+    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n);
+    float pdf(const Vec3<float> &pos, const Vec3<float> &n, const Vec3<float> &d) const;
 };
 
 
 struct CosineDistribution : public Distribution {
     CosineDistribution();
     ~CosineDistribution();
-    Vec3<double> sample(const Vec3<double> &pos, const Vec3<double> &n);
-    double pdf(const Vec3<double> &pos, const Vec3<double> &n, const Vec3<double> &d) const;
+    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n);
+    float pdf(const Vec3<float> &pos, const Vec3<float> &n, const Vec3<float> &d) const;
 };
 
 
@@ -46,16 +46,16 @@ public:
     LightDistribution(std::shared_ptr<Geometry> geom) : geometry(geom), Distribution() {}
     ~LightDistribution() {}
 
-    Vec3<double> sample(const Vec3<double> &pos, const Vec3<double>&) {
-        Vec3<double> x = geometry->position + geometry->rotation * sample_();
+    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float>&) {
+        Vec3<float> x = geometry->position + geometry->rotation * sample_();
         return (x - pos).norm();
     }
 
     // angle pdf
-    double pdf(const Ray &r) const {
-        double res = 0;
+    float pdf(const Ray &r) const {
+        float res = 0;
         for (Intersection &obj_inter : geometry->get_intersect(r)) {
-            double tmp = pdf_(-geometry->rotation * (r.reveal(obj_inter.t) - geometry->position));
+            float tmp = pdf_(-geometry->rotation * (r.reveal(obj_inter.t) - geometry->position));
             if (tmp == 0) {
                 throw std::logic_error("zero probability density by point");
             }
@@ -64,27 +64,27 @@ public:
         return res;
     }
 
-    double pdf(const Vec3<double> &pos, const Vec3<double> &n, const Vec3<double> &d) const {
+    float pdf(const Vec3<float> &pos, const Vec3<float> &n, const Vec3<float> &d) const {
         return pdf({pos, d});
     }
 
 private:
     // return sample from geom in local cords
-    virtual Vec3<double> sample_() = 0;
+    virtual Vec3<float> sample_() = 0;
     // return geometry point pdf
-    virtual double pdf_(const Vec3<double> &pos) const = 0;
+    virtual float pdf_(const Vec3<float> &pos) const = 0;
 };
 
 
 struct BoxDistribution : public LightDistribution {
     std::shared_ptr<Box> box;
-    Vec3<double> faces;
-    double faces_square;
+    Vec3<float> faces;
+    float faces_square;
 
     BoxDistribution(std::shared_ptr<Box> b);
     ~BoxDistribution();
-    Vec3<double> sample_();
-    double pdf_(const Vec3<double> &) const;
+    Vec3<float> sample_();
+    float pdf_(const Vec3<float> &) const;
 };
 
 
@@ -92,23 +92,23 @@ struct EllipsoidDistribution : public LightDistribution {
     std::shared_ptr<Ellipsoid> ellips;
     EllipsoidDistribution(std::shared_ptr<Ellipsoid> e);
     ~EllipsoidDistribution();
-    Vec3<double> sample_();
-    double pdf_(const Vec3<double> &pos) const;
+    Vec3<float> sample_();
+    float pdf_(const Vec3<float> &pos) const;
 };
 
 struct TriangleDistribution : public LightDistribution {
     std::shared_ptr<Triangle> tr;
     TriangleDistribution(std::shared_ptr<Triangle> tr);
     ~TriangleDistribution();
-    Vec3<double> sample_();
-    double pdf_(const Vec3<double> &pos) const;
+    Vec3<float> sample_();
+    float pdf_(const Vec3<float> &pos) const;
 };
 
 namespace BVH_light {
 using T = std::shared_ptr<LightDistribution>;
 struct Map {
     Map (const Ray &r) : r(r) {};
-    double operator() (const T& dist) const {
+    float operator() (const T& dist) const {
         return dist->pdf(r);
     }
     const Ray r;
@@ -121,12 +121,12 @@ struct Geom {
 };
 
 struct EarlyOut {
-    bool operator() (const double &res, const Intersection &inter) const {
+    bool operator() (const float &res, const Intersection &inter) const {
         return false;
     }
 };
 
-using BVH = RawBVH::BVH<T, double, Map, std::plus<double>, Geom, EarlyOut>;
+using BVH = RawBVH::BVH<T, float, Map, std::plus<float>, Geom, EarlyOut>;
 
 } // namespace BVH_light
 
@@ -137,6 +137,6 @@ struct MixedDistribution : public Distribution {
 
     MixedDistribution(std::vector<std::shared_ptr<LightDistribution>> &&dists);
     ~MixedDistribution();
-    Vec3<double> sample(const Vec3<double> &pos, const Vec3<double> &n);
-    double pdf(const Vec3<double> &pos, const Vec3<double> &n, const Vec3<double> &d) const;
+    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n);
+    float pdf(const Vec3<float> &pos, const Vec3<float> &n, const Vec3<float> &d) const;
 };

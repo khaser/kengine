@@ -7,30 +7,30 @@
 #include <memory>
 
 struct Material {
-    Vec3<double> color;
+    Vec3<float> color;
     virtual ~Material() {};
-    virtual Vec3<double> sample(Ray w_in, Intersection i,
-                                    const std::function<Vec3<double>(const Ray&)> &raycast) = 0;
+    virtual Vec3<float> sample(Ray w_in, Intersection i,
+                                    const std::function<Vec3<float>(const Ray&)> &raycast) = 0;
 };
 
 struct Diffuse : public Material {
-    Vec3<double> emission;
+    Vec3<float> emission;
     Distribution *dist;
-    Vec3<double> sample(Ray w_in, Intersection i,
-                            const std::function<Vec3<double>(const Ray&)> &raycast);
+    Vec3<float> sample(Ray w_in, Intersection i,
+                            const std::function<Vec3<float>(const Ray&)> &raycast);
 };
 
 struct Metallic : public Material {
-    Vec3<double> emission;
-    Vec3<double> sample(Ray w_in, Intersection i,
-                            const std::function<Vec3<double>(const Ray&)> &raycast);
+    Vec3<float> emission;
+    Vec3<float> sample(Ray w_in, Intersection i,
+                            const std::function<Vec3<float>(const Ray&)> &raycast);
 };
 
 struct Dielectric : public Material {
-    double ior;
-    Vec3<double> sample(Ray w_in, Intersection i,
-                            const std::function<Vec3<double>(const Ray&)> &raycast);
+    float ior;
+    Vec3<float> sample(Ray w_in, Intersection i,
+                            const std::function<Vec3<float>(const Ray&)> &raycast);
 private:
-    double get_reflectness(double cos_phi1);
+    float get_reflectness(float cos_phi1);
 };
 

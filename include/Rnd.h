@@ -16,11 +16,11 @@ private:
 public:
     static Rnd* getRnd();
 
-    Vec3<double> in_sphere();
+    Vec3<float> in_sphere();
 
-    double uniform(double Min, double Max);
+    float uniform(float Min, float Max);
 
-    bool bernoulli(double success_rate = 0.5);
+    bool bernoulli(float success_rate = 0.5);
 
     int uniform_int(int Min, int Max);
 };

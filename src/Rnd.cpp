@@ -4,15 +4,15 @@
 #include <random>
 #include <math.h>
 
-Vec3<double> Rnd::in_sphere() {
-    double z = uniform(-1.0, 1.0);
-    double phi = uniform(0.0, 2 * M_PI);
-    double sq = sqrt(1 - z * z);
+Vec3<float> Rnd::in_sphere() {
+    float z = uniform(-1.0, 1.0);
+    float phi = uniform(0.0, 2 * M_PI);
+    float sq = sqrt(1 - z * z);
     return {sq * cos(phi), sq * sin(phi), z};
 }
 
-double Rnd::uniform(double Min, double Max) {
-    std::uniform_real_distribution<double> dis(Min, Max);
+float Rnd::uniform(float Min, float Max) {
+    std::uniform_real_distribution<float> dis(Min, Max);
     return dis(rnd);
 }
 
@@ -29,7 +29,7 @@ Rnd* Rnd::getRnd() {
     }
 }
 
-bool Rnd::bernoulli(double succ_rate) {
+bool Rnd::bernoulli(float succ_rate) {
     std::bernoulli_distribution dis(succ_rate);
     return dis(rnd);
 }

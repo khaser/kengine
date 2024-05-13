@@ -53,8 +53,8 @@ using BVH = RawBVH::BVH<T, F, Map, Merge, Geom, EarlyOut>;
 
 struct Scene {
     std::pair<uint16_t, uint16_t> dimensions;
-    Vec3<double> bg_color;
-    Vec3<double> ambient_light;
+    Vec3<float> bg_color;
+    Vec3<float> ambient_light;
     Camera camera;
 
     BVH_bounds::BVH bvh;
@@ -67,19 +67,19 @@ struct Scene {
 
     Scene(std::ifstream is);
 
-    std::vector<std::vector<Vec3<double>>> render_scene();
+    std::vector<std::vector<Vec3<float>>> render_scene();
 
 private:
     // x, y in [-1, 1]
-    Vec3<double> postprocess(Vec3<double> in_color);
+    Vec3<float> postprocess(Vec3<float> in_color);
 
-    Vec3<double> aces_tonemap(const Vec3<double> &x);
+    Vec3<float> aces_tonemap(const Vec3<float> &x);
 
-    Vec3<double> gamma_correction(const Vec3<double> &x);
+    Vec3<float> gamma_correction(const Vec3<float> &x);
 
-    Vec3<double> saturate(const Vec3<double> &color);
+    Vec3<float> saturate(const Vec3<float> &color);
 
-    Vec3<double> raycast(const Ray& ray, int ttl) const;
+    Vec3<float> raycast(const Ray& ray, int ttl) const;
 
     std::optional<std::pair<Object, Intersection>> get_intersect(const Ray& ray) const;
 };

@@ -31,7 +31,7 @@ struct Mat3 {
 
     std::optional<Vec3<T>> solve(const Vec3<T> &b) {
         T d = det();
-        if (d <= 1e-9) {
+        if (d <= 1e-6) {
             return std::nullopt;
         }
         T dx = (Mat3 {b, y, z}).det();

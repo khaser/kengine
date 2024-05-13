@@ -61,19 +61,19 @@ Scene::Scene(std::ifstream is) {
             objs.emplace_back();
             objs.back().material = std::make_unique<Diffuse>();
         } else if (token == "PLANE") {
-            Vec3<double> norm;
+            Vec3<float> norm;
             is >> norm;
             objs.back().geometry = std::make_unique<Plane>(norm);
         } else if (token == "ELLIPSOID") {
-            Vec3<double> r;
+            Vec3<float> r;
             is >> r;
             objs.back().geometry = std::make_unique<Ellipsoid>(r);
         } else if (token == "BOX") {
-            Vec3<double> size;
+            Vec3<float> size;
             is >> size;
             objs.back().geometry = std::make_unique<Box>(size);
         } else if (token == "TRIANGLE") {
-            Mat3<double> v;
+            Mat3<float> v;
             is >> v.x >> v.y >> v.z;
             objs.back().geometry = std::make_unique<Triangle>(v);
         } else if (token == "METALLIC") {
@@ -85,11 +85,11 @@ Scene::Scene(std::ifstream is) {
             objs.back().material = std::make_unique<Dielectric>();
             objs.back().material->color = color;
         } else if (token == "IOR") {
-            double ior;
+            float ior;
             is >> ior;
             dynamic_pointer_cast<Dielectric>(objs.back().material)->ior = ior;
         } else if (token == "EMISSION") {
-            Vec3<double> emission;
+            Vec3<float> emission;
             is >> emission;
             dynamic_pointer_cast<Diffuse>(objs.back().material)->emission = emission;
 
@@ -122,8 +122,8 @@ Scene::Scene(std::ifstream is) {
 }
 
 
-std::vector<std::vector<Vec3<double>>> Scene::render_scene() {
-    std::vector<std::vector<Vec3<double>>> output(dimensions.second, std::vector<Vec3<double>>(dimensions.first));
+std::vector<std::vector<Vec3<float>>> Scene::render_scene() {
+    std::vector<std::vector<Vec3<float>>> output(dimensions.second, std::vector<Vec3<float>>(dimensions.first));
     std::atomic_size_t samples_processed = 0;
     size_t samples_total = dimensions.first * dimensions.second * samples;
 #pragma omp parallel
@@ -139,12 +139,12 @@ std::vector<std::vector<Vec3<double>>> Scene::render_scene() {
 #pragma omp for schedule(dynamic)
     for (uint16_t x = 0; x < dimensions.first; ++x) {
         for (uint16_t y = 0; y < dimensions.second; ++y) {
-            Vec3<double> pixel = {0, 0, 0};
+            Vec3<float> pixel = {0, 0, 0};
             for (uint16_t sample = 0; sample < samples; ++sample) {
-                double x_01 = (x + Rnd::getRnd()->uniform(0, 1)) / dimensions.first;
-                double y_01 = (y + Rnd::getRnd()->uniform(0, 1)) / dimensions.second;
-                double x_11 = x_01 * 2 - 1;
-                double y_11 = y_01 * 2 - 1;
+                float x_01 = (x + Rnd::getRnd()->uniform(0, 1)) / dimensions.first;
+                float y_01 = (y + Rnd::getRnd()->uniform(0, 1)) / dimensions.second;
+                float x_11 = x_01 * 2 - 1;
+                float y_11 = y_01 * 2 - 1;
                 pixel = pixel + raycast(camera.raycast(x_11, -y_11), ray_depth);
                 samples_processed++;
             }
@@ -156,28 +156,28 @@ std::vector<std::vector<Vec3<double>>> Scene::render_scene() {
 }
 
 // x, y in [-1, 1]
-Vec3<double> Scene::postprocess(Vec3<double> in_color) {
+Vec3<float> Scene::postprocess(Vec3<float> in_color) {
     return gamma_correction(aces_tonemap(in_color));
 }
 
-Vec3<double> Scene::aces_tonemap(const Vec3<double> &x) {
-    const double a = 2.51;
-    const double b = 0.03;
-    const double c = 2.43;
-    const double d = 0.59;
-    const double e = 0.14;
+Vec3<float> Scene::aces_tonemap(const Vec3<float> &x) {
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
     return (x*(x*a+b))/(x*(x*c+d)+e);
 }
 
-Vec3<double> Scene::gamma_correction(const Vec3<double> &x) {
+Vec3<float> Scene::gamma_correction(const Vec3<float> &x) {
     return saturate(pow(x, 1 / 2.2));
 }
 
-Vec3<double> Scene::saturate(const Vec3<double> &color) {
-    return color.clamp(Vec3<double>(0), Vec3<double>(1));
+Vec3<float> Scene::saturate(const Vec3<float> &color) {
+    return color.clamp(Vec3<float>(0), Vec3<float>(1));
 }
 
-Vec3<double> Scene::raycast(const Ray& ray, int ttl) const {
+Vec3<float> Scene::raycast(const Ray& ray, int ttl) const {
     if (ttl == 0) {
         return bg_color;
     }

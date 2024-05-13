@@ -3,7 +3,7 @@
 
 #include "Distribution.h"
 
-typedef Vec3<double> vec3;
+typedef Vec3<float> vec3;
 
 TriangleDistribution::TriangleDistribution(std::shared_ptr<Triangle> geom)
     : LightDistribution(geom), tr(geom) {};
@@ -21,7 +21,7 @@ vec3 TriangleDistribution::sample_() {
     return tr->vert * bari;
 }
 
-double TriangleDistribution::pdf_(const Vec3<double>&) const {
-    double square = 0.5 * (tr->u ^ tr->v).len();
+float TriangleDistribution::pdf_(const Vec3<float>&) const {
+    float square = 0.5 * (tr->u ^ tr->v).len();
     return 1 / square;
 }
