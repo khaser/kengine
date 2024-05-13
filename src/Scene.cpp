@@ -21,23 +21,6 @@
 
 using namespace std::placeholders;
 
-namespace BVH_bounds {
-
-std::optional<Intersection> best_inter(std::shared_ptr<Geometry> geom, const Ray &r) {
-    std::vector<Intersection> inters = geom->get_intersect(r);
-    auto it = std::min_element(inters.begin(), inters.end(),
-        [] (const auto &a, const auto &b) {
-            return a.t < b.t;
-        });
-    if (it == inters.end()) {
-        return std::nullopt;
-    } else {
-        return *it;
-    }
-}
-
-}
-
 using namespace BVH_bounds;
 
 Scene::Scene(std::ifstream is) {

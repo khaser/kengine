@@ -121,14 +121,23 @@ struct Geom {
 };
 
 struct EarlyOut {
-    bool operator() (const Ray& r, const double &res, const Node *node) const {
+    bool operator() (const double &res, const Intersection &inter) const {
         return false;
     }
 };
 
 struct Traverse {
-    std::vector<Node*> operator() (const Ray& r, const Node* node) const {
-        return {node->left, node->right};
+    std::vector<std::pair<const Node*, Intersection>> operator() (const Ray& r, const Node* node) const {
+        std::vector<std::pair<const Node*, Intersection>> res;
+        auto helper = [&r, &res] (const Node* node) {
+            if (node == NULL) return;
+            auto inter = RawBVH::best_inter(std::make_shared<Box>(node->aabb), r);
+            if (!inter) return;
+            res.emplace_back(node, *inter);
+        };
+        helper(node->left);
+        helper(node->right);
+        return res;
     }
 };
 

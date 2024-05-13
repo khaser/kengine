@@ -13,12 +13,10 @@ namespace BVH_bounds {
 using T = Object;
 using F = std::optional<std::pair<Object, Intersection>>;
 
-std::optional<Intersection> best_inter(std::shared_ptr<Geometry> geom, const Ray &r);
-
 struct Map {
     Map (const Ray &ray) : ray(ray) {};
     F operator() (const T& obj) const {
-        auto res = best_inter(obj.geometry, ray);
+        auto res = RawBVH::best_inter(obj.geometry, ray);
         if (res) {
             return std::make_pair(obj, *res);
         } else {
@@ -43,17 +41,25 @@ struct Geom {
 };
 
 struct EarlyOut {
-    bool operator() (const Ray& r, const F &res, const Node *node) const {
+    bool operator() (const F &res, const Intersection &inter) const {
         if (!res) return false;
-        auto inter = best_inter(std::make_shared<Box>(node->aabb), r);
-        if (!inter) return true;
-        return res->second.t < inter->t;
+        return res->second.t < inter.t;
     }
 };
 
 struct Traverse {
-    std::vector<Node*> operator() (const Ray& r, const Node* node) const {
-        return {node->left, node->right};
+    std::vector<std::pair<const Node*, Intersection>> operator() (const Ray& r, const Node* node) const {
+        std::vector<std::pair<const Node*, Intersection>> res;
+        auto helper = [&r, &res] (const Node* node) {
+            if (node == NULL) return;
+            auto inter = RawBVH::best_inter(std::make_shared<Box>(node->aabb), r);
+            if (!inter) return;
+            res.emplace_back(node, *inter);
+        };
+        helper(node->left);
+        helper(node->right);
+        std::sort(res.begin(), res.end(), [] (auto &a, auto &b) { return a.second.t < b.second.t; });
+        return res;
     }
 };
 

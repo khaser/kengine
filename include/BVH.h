@@ -16,6 +16,8 @@ struct Node {
 
 namespace RawBVH {
 
+std::optional<Intersection> best_inter(std::shared_ptr<Geometry> geom, const Ray &r);
+
 template<class T, class F, class Map, class Merge, class Geom, class EarlyOut, class Traverse>
 struct BVH {
 
@@ -35,34 +37,16 @@ public:
 
 private:
     F get_intersect_(const Node *node, const Ray& ray, bool early_out) const {
-        if (node->aabb.get_intersect(ray).empty()) {
-            return ini;
-        }
-
         std::vector<F> node_inters;
         std::transform(objs.begin() + node->start, objs.begin() + node->start + node->len, std::back_inserter(node_inters), Map(ray));
         F res = std::accumulate(node_inters.begin(), node_inters.end(), ini, Merge());
 
-        for (Node* child : Traverse() (ray, node)) {
-            if (child != NULL && !(EarlyOut() (ray, res, child))) {
-                res = Merge()(res, get_intersect_(child, ray, early_out));
+        for (auto &[child, inter] : Traverse() (ray, node)) {
+            if (child != NULL && !(EarlyOut() (res, inter))) {
+                res = Merge() (res, get_intersect_(child, ray, early_out));
             }
         }
         return res;
-
-        /* { */
-        /*     auto first_inter_by_idx = [&] (ssize_t idx) { */
-        /*         return best_inter(idx == -1 ? std::vector<Intersection>() : tree[idx].aabb.get_intersect(ray)); */
-        /*     }; */
-
-        /*     auto left_first = first_inter_by_idx(node.left); */
-        /*     auto right_first = first_inter_by_idx(node.right); */
-        /*     if (inter_cmp(left_first, right_first)) { */
-        /*         childs = {std::make_pair(node.left, left_first), std::make_pair(node.right, right_first)}; */
-        /*     } else { */
-        /*         childs = {std::make_pair(node.right, right_first), std::make_pair(node.left, left_first)}; */
-        /*     } */
-        /* } */
     }
 
     Node* build_bvh(std::vector<T>::iterator begin, std::vector<T>::iterator end) {
