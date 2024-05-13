@@ -30,7 +30,8 @@
         '';
       });
     in {
-      devShell = pkgs.clangStdenv.mkDerivation {
+      # devShell = pkgs.clangStdenv.mkDerivation {
+      devShell = pkgs.gcc9Stdenv.mkDerivation {
         name = "cpp";
 
         nativeBuildInputs = with pkgs; [

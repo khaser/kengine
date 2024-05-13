@@ -126,22 +126,7 @@ struct EarlyOut {
     }
 };
 
-struct Traverse {
-    std::vector<std::pair<const Node*, Intersection>> operator() (const Ray& r, const Node* node) const {
-        std::vector<std::pair<const Node*, Intersection>> res;
-        auto helper = [&r, &res] (const Node* node) {
-            if (node == NULL) return;
-            auto inter = RawBVH::best_inter(std::make_shared<Box>(node->aabb), r);
-            if (!inter) return;
-            res.emplace_back(node, *inter);
-        };
-        helper(node->left);
-        helper(node->right);
-        return res;
-    }
-};
-
-using BVH = RawBVH::BVH<T, double, Map, std::plus<double>, Geom, EarlyOut, Traverse>;
+using BVH = RawBVH::BVH<T, double, Map, std::plus<double>, Geom, EarlyOut>;
 
 } // namespace BVH_light
 
