@@ -46,7 +46,7 @@ public:
     LightDistribution(std::shared_ptr<Geometry> geom) : geometry(geom), Distribution() {}
     ~LightDistribution() {}
 
-    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float>&) {
+    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n) {
         Vec3<float> x = geometry->position + geometry->rotation * sample_();
         return (x - pos).norm();
     }
@@ -56,10 +56,15 @@ public:
         float res = 0;
         for (Intersection &obj_inter : geometry->get_intersect(r)) {
             float tmp = pdf_(-geometry->rotation * (r.reveal(obj_inter.t) - geometry->position));
-            if (tmp == 0) {
+            if (tmp <= 1e-5) {
                 throw std::logic_error("zero probability density by point");
             }
-            res += tmp * obj_inter.t * obj_inter.t / abs(obj_inter.normal % r.v);
+            float angle_k = abs(obj_inter.normal % r.v);
+            if (angle_k <= 1e-6) {
+                std::cerr << r.start << ' ' << obj_inter.t << ' ' << obj_inter.normal << ' ' << r.v << std::endl;
+                angle_k = 1e-6;
+            }
+            res += tmp * obj_inter.t * obj_inter.t / angle_k;
         }
         return res;
     }
@@ -132,8 +137,8 @@ using BVH = RawBVH::BVH<T, float, Map, std::plus<float>, Geom, EarlyOut>;
 
 struct MixedDistribution : public Distribution {
     BVH_light::BVH bvh;
-    std::vector<std::shared_ptr<Distribution>> dists;
-    std::vector<std::shared_ptr<Distribution>>::const_iterator bvh_end;
+    std::vector<std::shared_ptr<LightDistribution>> dists;
+    CosineDistribution cosine;
 
     MixedDistribution(std::vector<std::shared_ptr<LightDistribution>> &&dists);
     ~MixedDistribution();

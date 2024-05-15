@@ -3,21 +3,28 @@
 #include "Object/Geometry.h"
 
 #include <vector>
+#include <iostream>
 
-Box::Box(const Vec3<float> &v) : size(v) {}
+Box::Box(const Vec3<float> &v) : size(v), div_size(Vec3<float>(1) / size) {}
 
-Box::Box(const Vec3<float> &size, const Vec3<float> &position, const Quaternion &rotation) : Geometry(position, rotation), size(size) {}
-Box::Box(const Vec3<float> &aa, const Vec3<float> &bb) : Geometry((bb + aa) / 2, {}), size((bb - aa) / 2) {}
+Box::Box(const Vec3<float> &size, const Vec3<float> &position, const Quaternion &rotation) :
+    Geometry(position, rotation),
+    size(size),
+    div_size(Vec3<float>(1) / size) {}
+Box::Box(const Vec3<float> &aa, const Vec3<float> &bb) :
+    Geometry((bb + aa) / 2, {}),
+    size((bb - aa) / 2),
+    div_size(Vec3<float>(1) / size) {}
 
 Vec3<float> Box::normal(const Vec3<float>& p) const {
-    Vec3<float> v = p / size;
+    Vec3<float> v = p * div_size;
     Vec3<float> av = {fabsf(v.x), fabsf(v.y), fabsf(v.z)};
     if (av.x > av.y && av.x > av.z) {
-        return {v.x, 0, 0};
+        return {1, 0, 0};
     } else if (av.y > av.x && av.y > av.z) {
-        return {0, v.y, 0};
+        return {0, 1, 0};
     } else {
-        return {0, 0, v.z};
+        return {0, 0, 1};
     }
 }
 

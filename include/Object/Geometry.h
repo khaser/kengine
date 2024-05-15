@@ -51,6 +51,7 @@ private:
 
 struct Box : public Geometry {
     Vec3<float> size;
+    Vec3<float> div_size;
     Box(const Vec3<float>&);
     Box(const Vec3<float> &size, const Vec3<float> &position, const Quaternion &rotation);
     Box(const Vec3<float> &aa, const Vec3<float> &bb);

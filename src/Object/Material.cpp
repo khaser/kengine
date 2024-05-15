@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <math.h>
 #include <iostream>
+#include <cmath>
 
 #include "Rnd.h"
 #include "Primitives.h"
@@ -24,13 +25,15 @@ Vec3<float> Diffuse::sample(Ray w_in, Intersection i,
     Ray r_out = Ray {pos, w_out};
 
     r_out.bump();
-    if (emission != Vec3<float>{0}) {
+    if (emission.len() > 1e-5) {
         return emission;
     }
     if (w_out % i.normal <= 1e-6) {
         return {0, 0, 0};
     }
-    return emission + (color / M_PI) * raycast(r_out) * (i.normal % w_out) / dist->pdf(pos, i.normal, w_out);
+
+    auto tmp = dist->pdf(pos, i.normal, w_out);
+    return emission + (color / M_PI) * raycast(r_out) * (i.normal % w_out) / tmp;
 }
 
 static Ray reflect(const Vec3<float> pos, const Vec3<float> d, const Vec3<float> normal) {

@@ -7,7 +7,7 @@
 Ellipsoid::Ellipsoid(const Vec3<float> &v) : r(v) {}
 
 Vec3<float> Ellipsoid::normal(const Vec3<float>& p) const {
-    return p.norm() / (r * r);
+    return p.norm();
 }
 
 std::vector<float> Ellipsoid::get_intersect_(const Ray& ray) const {
