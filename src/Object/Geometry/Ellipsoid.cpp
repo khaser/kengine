@@ -1,4 +1,5 @@
 #include "Primitives/Vec3.h"
+#include "Primitives/AABB.h"
 
 #include "Object/Geometry.h"
 
@@ -27,6 +28,6 @@ std::vector<float> Ellipsoid::get_intersect_(const Ray& ray) const {
     return res;
 };
 
-Box Ellipsoid::AABB() const {
-    return Box(r, position, rotation);
+AABB Ellipsoid::get_aabb() const {
+    return { position - r, position + r };
 }

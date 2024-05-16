@@ -1,4 +1,5 @@
 #include "Primitives/Vec3.h"
+#include "Primitives/AABB.h"
 
 #include "Object/Geometry.h"
 
@@ -17,6 +18,7 @@ std::vector<float> Plane::get_intersect_(const Ray& ray) const {
     return res;
 };
 
-Box Plane::AABB() const {
-    return Box({0, 0, 0}, position, rotation);
+AABB Plane::get_aabb() const {
+    AABB res;
+    return res;
 }

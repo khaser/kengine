@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "Primitives/AABB.h"
 #include "Primitives.h"
 
 struct Box;
@@ -21,7 +22,7 @@ struct Geometry {
     Vec3<float> mid() const { return position + shift; };
     std::vector<Intersection> get_intersect(Ray ray) const;
     virtual Vec3<float> normal(const Vec3<float>& p) const = 0;
-    virtual Box AABB() const = 0;
+    virtual AABB get_aabb() const = 0;
 private:
     // get sorted vector of lengths on which ray intersect geometry
     // Use ray.reveal, to get intersection cords
@@ -34,7 +35,7 @@ struct Plane : public Geometry {
     Plane(const Vec3<float>&);
     virtual ~Plane() {};
     Vec3<float> normal(const Vec3<float>&) const;
-    virtual Box AABB() const;
+    virtual AABB get_aabb() const;
 private:
     std::vector<float> get_intersect_(const Ray&) const;
 };
@@ -44,7 +45,7 @@ struct Ellipsoid : public Geometry {
     Ellipsoid(const Vec3<float>&);
     virtual ~Ellipsoid() {};
     Vec3<float> normal(const Vec3<float>&) const;
-    virtual Box AABB() const;
+    virtual AABB get_aabb() const;
 private:
     std::vector<float> get_intersect_(const Ray&) const;
 };
@@ -55,13 +56,10 @@ struct Box : public Geometry {
     Box(const Vec3<float>&);
     Box(const Vec3<float> &size, const Vec3<float> &position, const Quaternion &rotation);
     Box(const Vec3<float> &aa, const Vec3<float> &bb);
-    Vec3<float> Min() const;
-    Vec3<float> Max() const;
+    virtual AABB get_aabb() const;
     void bump();
     virtual ~Box() {};
     Vec3<float> normal(const Vec3<float>&) const;
-    Box operator|(const Geometry& oth) const;
-    virtual Box AABB() const;
 private:
     std::vector<float> get_intersect_(const Ray&) const;
 };
@@ -69,10 +67,11 @@ private:
 struct Triangle : public Geometry {
     Mat3<float> vert;
     Vec3<float> u, v;
+    Vec3<float> norm;
     Triangle(const Mat3<float>&);
     virtual ~Triangle() {};
     Vec3<float> normal(const Vec3<float>&) const;
-    virtual Box AABB() const;
+    virtual AABB get_aabb() const;
 private:
     std::vector<float> get_intersect_(const Ray&) const;
 };

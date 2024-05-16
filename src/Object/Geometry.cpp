@@ -15,8 +15,7 @@ std::vector<Intersection> Geometry::get_intersect(Ray ray) const {
         if (is_ins) {
             n = -n;
         }
-        n = (rotation * n).norm();
-        res.push_back({t, n, is_ins});
+        res.push_back({t, rotation * n, is_ins});
     }
     return res;
 }

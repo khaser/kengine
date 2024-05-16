@@ -1,5 +1,6 @@
 #include "Primitives/Vec3.h"
 #include "Primitives/Mat3.h"
+#include "Primitives/AABB.h"
 
 #include "Object/Geometry.h"
 
@@ -7,13 +8,13 @@
 #include <iostream>
 #include <utility>
 
-Triangle::Triangle(const Mat3<float> &cords)
-    : vert(cords), v(cords.y - cords.x), u(cords.z - cords.x) {
+Triangle:: Triangle(const Mat3<float> &cords)
+    : vert(cords), v(cords.y - cords.x), u(cords.z - cords.x), norm((v ^ u).norm()) {
     shift = (cords.x + cords.y + cords.z) / 3;
 }
 
 Vec3<float> Triangle::normal(const Vec3<float>& p) const {
-    return (v ^ u).norm();
+    return norm;
 }
 
 std::vector<float> Triangle::get_intersect_(const Ray& ray) const {
@@ -36,7 +37,11 @@ std::vector<float> Triangle::get_intersect_(const Ray& ray) const {
     }
 };
 
-Box Triangle::AABB() const {
+AABB Triangle::get_aabb() const {
     auto gvert = Mat3<float>(position) + rotation * vert;
-    return Box(min(gvert.x, min(gvert.y, gvert.z)), max(max(gvert.x, gvert.y), gvert.z));
+    AABB res;
+    res.extend(gvert.x);
+    res.extend(gvert.y);
+    res.extend(gvert.z);
+    return res;
 }

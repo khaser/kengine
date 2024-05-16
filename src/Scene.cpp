@@ -126,18 +126,9 @@ std::vector<std::vector<Vec3<float>>> Scene::render_scene() {
     std::vector<std::vector<Vec3<float>>> output(dimensions.second, std::vector<Vec3<float>>(dimensions.first));
     std::atomic_size_t samples_processed = 0;
     size_t samples_total = dimensions.first * dimensions.second * samples;
-#pragma omp parallel
-    {
-#pragma omp single nowait
-    {
-    while (samples_processed != samples_total) {
-        std::cerr << samples_processed << ' ' << samples_total << std::endl;
-        std::cerr << "Generated " << std::fixed << std::setprecision(4) << 100 * 1.0 * samples_processed / samples_total << "% of samples\n";
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-    }
-#pragma omp for schedule(dynamic)
+    auto start_clock = clock();
     for (uint16_t x = 0; x < dimensions.first; ++x) {
+#pragma omp parallel for schedule(dynamic)
         for (uint16_t y = 0; y < dimensions.second; ++y) {
             Vec3<float> pixel = {0, 0, 0};
             for (uint16_t sample = 0; sample < samples; ++sample) {
@@ -150,8 +141,10 @@ std::vector<std::vector<Vec3<float>>> Scene::render_scene() {
             }
             output[y][x] = postprocess(pixel / samples);
         }
+        std::cerr << samples_processed << ' ' << samples_total << std::endl;
+        std::cerr << "Generated " << std::fixed << std::setprecision(4) << 100 * 1.0 * samples_processed / samples_total << "% of samples\n";
+        std::cerr << "Spent time: " << 0.25 * (clock() - start_clock) / CLOCKS_PER_SEC << std::endl;
     }
-    } // omp parallel
     return output;
 }
 

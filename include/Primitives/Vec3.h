@@ -57,6 +57,14 @@ struct Vec3 {
         return (*this) * (1.0 / len());
     }
 
+    T min() const {
+        return std::min({x, y, z});
+    }
+
+    T max() const {
+        return std::max({x, y, z});
+    }
+
     Vec3<T> maj() const {
         if (x >= y && x >= z) {
             return {1, 0, 0};

@@ -20,18 +20,10 @@ struct Quaternion {
 /*     return res.v; */
 /* } */
 
-// It seems faster
 template<typename T>
 Vec3<T> operator*(const Quaternion &q, const Vec3<T> &v) {
-    float vx = q.v.y*v.z-q.v.z*v.y;
-    float vy = q.v.z*v.x-q.v.x*v.z;
-    float vz = q.v.x*v.y-q.v.y*v.x;
-    vx += vx; vy += vy; vz += vz;
-    return {
-        v.x + q.w*vx + q.v.y*vz-q.v.z*vy,
-        v.y + q.w*vy + q.v.z*vx-q.v.x*vz,
-        v.z + q.w*vz + q.v.x*vy-q.v.y*vx
-    };
+    Vec3<T> t = (q.v ^ v) * 2.0;
+    return v + (t * q.w) + (q.v ^ t);
 }
 
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Primitives/Ray.h"
+#include "Primitives/AABB.h"
 #include "Object.h"
 
 #include <vector>
@@ -11,7 +12,7 @@ struct Node {
     ssize_t len;
     ssize_t left;
     ssize_t right;
-    Box aabb;
+    AABB aabb;
 };
 
 namespace RawBVH {
@@ -45,7 +46,7 @@ private:
         std::vector<std::pair<ssize_t, Intersection>> childs;
         auto helper = [&ray, &res, &childs, this] (ssize_t node_idx) {
             if (node_idx == -1) return;
-            auto inter = RawBVH::best_inter(std::make_shared<Box>(tree[node_idx].aabb), ray);
+            auto inter = tree[node_idx].aabb.get_intersect(ray);
             if (!inter) return;
             childs.emplace_back(node_idx, *inter);
         };
@@ -63,15 +64,14 @@ private:
 
     ssize_t build_bvh(std::vector<T>::iterator begin, std::vector<T>::iterator end) {
         if (begin == end) return -1;
-        Box node_aabb = std::transform_reduce(begin + 1, end,
-            (Geom() (*begin))->AABB(),
-            [] (const Box& a, const Box& b) {
+        AABB node_aabb = std::transform_reduce(begin + 1, end,
+            (Geom() (*begin))->get_aabb(),
+            [] (const AABB& a, const AABB& b) {
                 return a | b;
             },
-            [] (const T& obj) { return (Geom() (obj))->AABB(); }
+            [] (const T& obj) { return (Geom() (obj))->get_aabb(); }
         );
         if (end - begin <= term_size) {
-            node_aabb.bump();
             /* std::cerr << "Create term node with " << end - begin << " objects\n"; */
             tree.push_back({begin - objs.begin(), end - begin, -1, -1, node_aabb});
             return tree.size() - 1;
@@ -80,13 +80,13 @@ private:
         auto pivot = end;
         while (true) {
             pivot = std::partition(begin, end, [&node_aabb] (const T &obj) {
-                auto sel = node_aabb.size.maj();
-                return (Geom() (obj))->mid() % sel > node_aabb.position % sel;
+                auto sel = node_aabb.size().maj();
+                return (Geom() (obj))->mid() % sel > node_aabb.position() % sel;
             });
             if (pivot == begin) {
-                node_aabb = Box(node_aabb.Min(), node_aabb.Max() - node_aabb.size.maj() * node_aabb.size);
+                node_aabb = { node_aabb.Min, node_aabb.Max - node_aabb.size().maj() * node_aabb.size() };
             } else if (pivot == end) {
-                node_aabb = Box(node_aabb.Min() + node_aabb.size.maj() * node_aabb.size, node_aabb.Max());
+                node_aabb = { node_aabb.Min + node_aabb.size().maj() * node_aabb.size(), node_aabb.Max };
             } else {
                 break;
             }
