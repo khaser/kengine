@@ -126,7 +126,7 @@ struct Geom {
 };
 
 struct EarlyOut {
-    bool operator() (const float &res, const Intersection &inter) const {
+    bool operator() (const float &res, float inter_t) const {
         return false;
     }
 };

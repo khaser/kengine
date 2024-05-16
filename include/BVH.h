@@ -43,19 +43,19 @@ private:
         std::transform(objs.begin() + node.start, objs.begin() + node.start + node.len, std::back_inserter(node_inters), Map(ray));
         F res = std::accumulate(node_inters.begin(), node_inters.end(), ini, Merge());
 
-        std::vector<std::pair<ssize_t, Intersection>> childs;
+        std::vector<std::pair<ssize_t, float>> childs;
         auto helper = [&ray, &res, &childs, this] (ssize_t node_idx) {
             if (node_idx == -1) return;
-            auto inter = tree[node_idx].aabb.get_intersect(ray);
-            if (!inter) return;
-            childs.emplace_back(node_idx, *inter);
+            auto inter_t = tree[node_idx].aabb.get_intersect(ray);
+            if (inter_t >= 1e20) return;
+            childs.emplace_back(node_idx, inter_t);
         };
         helper(node.left);
         helper(node.right);
-        std::sort(childs.begin(), childs.end(), [] (auto &a, auto &b) { return a.second.t < b.second.t; });
+        std::sort(childs.begin(), childs.end(), [] (auto &a, auto &b) { return a.second < b.second; });
 
-        for (auto &[child, inter] : childs) {
-            if (child != -1 && !(EarlyOut() (res, inter))) {
+        for (auto &[child, inter_t] : childs) {
+            if (child != -1 && !(EarlyOut() (res, inter_t))) {
                 res = Merge() (res, get_intersect_(child, ray, early_out));
             }
         }

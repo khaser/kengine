@@ -41,9 +41,9 @@ struct Geom {
 };
 
 struct EarlyOut {
-    bool operator() (const F &res, const Intersection &inter) const {
+    bool operator() (const F &res, float inter_t) const {
         if (!res) return false;
-        return res->second.t < inter.t;
+        return res->second.t < inter_t;
     }
 };
 
