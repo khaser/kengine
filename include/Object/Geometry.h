@@ -57,7 +57,6 @@ struct Box : public Geometry {
     Box(const Vec3<float> &size, const Vec3<float> &position, const Quaternion &rotation);
     Box(const Vec3<float> &aa, const Vec3<float> &bb);
     virtual AABB get_aabb() const;
-    void bump();
     virtual ~Box() {};
     Vec3<float> normal(const Vec3<float>&) const;
 private:

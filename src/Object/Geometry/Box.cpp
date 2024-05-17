@@ -55,7 +55,3 @@ struct AABB Box::get_aabb() const {
     }
     return res;
 }
-
-void Box::bump() {
-    size = size + 1e-4;
-}

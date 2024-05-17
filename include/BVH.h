@@ -84,9 +84,9 @@ private:
                 return (Geom() (obj))->mid() % sel > node_aabb.position() % sel;
             });
             if (pivot == begin) {
-                node_aabb = { node_aabb.Min, node_aabb.Max - node_aabb.size().maj() * node_aabb.size() };
+                node_aabb = { node_aabb.Min, node_aabb.Max - node_aabb.size().maj() * node_aabb.size() * 0.5 };
             } else if (pivot == end) {
-                node_aabb = { node_aabb.Min + node_aabb.size().maj() * node_aabb.size(), node_aabb.Max };
+                node_aabb = { node_aabb.Min + node_aabb.size().maj() * node_aabb.size() * 0.5, node_aabb.Max };
             } else {
                 break;
             }
@@ -104,7 +104,7 @@ private:
     std::vector<Node> tree;
     ssize_t root_node;
     F ini;
-    static const size_t term_size = 8;
+    static const size_t term_size = 16;
 };
 
 }
