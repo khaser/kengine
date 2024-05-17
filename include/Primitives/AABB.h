@@ -9,6 +9,11 @@
 // Aligned box
 struct AABB {
     Vec3<float> Min, Max;
+
+    AABB() : Min(1e9), Max(-1e9) {};
+
+    AABB(Vec3<float> a, Vec3<float> b) : Min(a), Max(b) {};
+
     void extend(Vec3<float> p) {
         Min = min(Min, p);
         Max = max(Max, p);

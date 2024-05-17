@@ -78,18 +78,12 @@ private:
         }
 
         auto pivot = end;
-        while (true) {
-            pivot = std::partition(begin, end, [&node_aabb] (const T &obj) {
-                auto sel = node_aabb.size().maj();
-                return (Geom() (obj))->mid() % sel > node_aabb.position() % sel;
-            });
-            if (pivot == begin) {
-                node_aabb = { node_aabb.Min, node_aabb.Max - node_aabb.size().maj() * node_aabb.size() * 0.5 };
-            } else if (pivot == end) {
-                node_aabb = { node_aabb.Min + node_aabb.size().maj() * node_aabb.size() * 0.5, node_aabb.Max };
-            } else {
-                break;
-            }
+        Vec3<float> sel = node_aabb.size().maj();
+        pivot = std::partition(begin, end, [&sel, &node_aabb] (const T &obj) {
+            return (Geom() (obj))->mid() % sel > node_aabb.position() % sel;
+        });
+        if (pivot == begin || pivot == end) {
+            throw std::logic_error("empty partitioning");
         }
 
         /* std::cerr << "Create split node: " << pivot - begin << " in left child, and " << end - pivot << " in right child\n"; */
@@ -104,7 +98,7 @@ private:
     std::vector<Node> tree;
     ssize_t root_node;
     F ini;
-    static const size_t term_size = 16;
+    static const size_t term_size = 4;
 };
 
 }
