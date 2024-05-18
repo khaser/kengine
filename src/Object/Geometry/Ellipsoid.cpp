@@ -5,10 +5,10 @@
 
 #include <vector>
 
-Ellipsoid::Ellipsoid(const Vec3<float> &v) : r(v) {}
+Ellipsoid::Ellipsoid(const Vec3<float> &v) : r(v), div_r2_cached(Vec3(1.f) / (r * r)) {}
 
 Vec3<float> Ellipsoid::normal(const Vec3<float>& p) const {
-    return p.norm();
+    return (p * div_r2_cached).norm();
 }
 
 std::vector<float> Ellipsoid::get_intersect_(const Ray& ray) const {

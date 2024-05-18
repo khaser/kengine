@@ -40,6 +40,7 @@ private:
 
 struct Ellipsoid : public Geometry {
     Vec3<float> r;
+    Vec3<float> div_r2_cached;
     Ellipsoid(const Vec3<float>&);
     virtual ~Ellipsoid() {};
     Vec3<float> normal(const Vec3<float>&) const;
