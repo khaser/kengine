@@ -80,10 +80,11 @@ private:
         auto pivot = end;
         Vec3<float> sel = node_aabb.size().maj();
         pivot = std::partition(begin, end, [&sel, &node_aabb] (const T &obj) {
-            return (Geom() (obj))->mid() % sel > node_aabb.position() % sel;
+            return (Geom() (obj))->get_aabb().position() % sel > node_aabb.position() % sel;
         });
         if (pivot == begin || pivot == end) {
-            throw std::logic_error("empty partitioning");
+            tree.push_back({begin - objs.begin(), end - begin, -1, -1, node_aabb});
+            return tree.size() - 1;
         }
 
         /* std::cerr << "Create split node: " << pivot - begin << " in left child, and " << end - pivot << " in right child\n"; */

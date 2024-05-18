@@ -10,7 +10,6 @@
 
 Triangle:: Triangle(const Mat3<float> &cords)
     : vert(cords), v(cords.y - cords.x), u(cords.z - cords.x), norm((v ^ u).norm()) {
-    shift = (cords.x + cords.y + cords.z) / 3;
 }
 
 Vec3<float> Triangle::normal(const Vec3<float>& p) const {

@@ -13,13 +13,11 @@ struct Geometry {
     Vec3<float> position;
     // used for correct BVH work on ill formatted scenes,
     // where all triangles defined in local coords
-    Vec3<float> shift;
     Quaternion rotation;
     Geometry() {};
     Geometry(const Vec3<float> &pos, const Quaternion &r) : position(pos), rotation(r) {};
     virtual ~Geometry() {};
 
-    Vec3<float> mid() const { return position + shift; };
     std::vector<Intersection> get_intersect(Ray ray) const;
     virtual Vec3<float> normal(const Vec3<float>& p) const = 0;
     virtual AABB get_aabb() const = 0;

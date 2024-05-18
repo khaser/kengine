@@ -21,11 +21,11 @@ Vec3<float> Box::normal(const Vec3<float>& p) const {
     Vec3<float> v = p * div_size;
     Vec3<float> av = {fabsf(v.x), fabsf(v.y), fabsf(v.z)};
     if (av.x > av.y && av.x > av.z) {
-        return {1, 0, 0};
+        return {v.x, 0, 0};
     } else if (av.y > av.x && av.y > av.z) {
-        return {0, 1, 0};
+        return {0, v.y, 0};
     } else {
-        return {0, 0, 1};
+        return {0, 0, v.z};
     }
 }
 

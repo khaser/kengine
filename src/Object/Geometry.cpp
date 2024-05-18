@@ -2,15 +2,14 @@
 
 #include "Object/Geometry.h"
 
+#include <iostream>
+
 std::vector<Intersection> Geometry::get_intersect(Ray ray) const {
     ray.start = -rotation * (ray.start - position);
     ray.v = -rotation * ray.v;
     std::vector<Intersection> res;
     for (float &t : get_intersect_(ray)) {
         Vec3<float> n = normal(ray.reveal(t));
-        if (fabs(n.len() - 1) > 1e-5) {
-            throw std::logic_error("wrong normal length");
-        }
         bool is_ins = is_inside(ray, t);
         if (is_ins) {
             n = -n;
