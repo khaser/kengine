@@ -61,7 +61,6 @@ public:
             }
             float angle_k = abs(obj_inter.normal % r.v);
             if (angle_k <= 1e-6) {
-                std::cerr << r.start << ' ' << obj_inter.t << ' ' << obj_inter.normal << ' ' << r.v << std::endl;
                 angle_k = 1e-6;
             }
             res += tmp * obj_inter.t * obj_inter.t / angle_k;

@@ -29,5 +29,13 @@ std::vector<float> Ellipsoid::get_intersect_(const Ray& ray) const {
 };
 
 AABB Ellipsoid::get_aabb() const {
-    return { position - r, position + r };
+    struct AABB res;
+    for (float i = -1; i <= 1; i += 2) {
+        for (float j = -1; j <= 1; j += 2) {
+            for (float k = -1; k <= 1; k += 2) {
+                res.extend(position + rotation * (r * Vec3<float>{i, j, k}));
+            }
+        }
+    }
+    return res;
 }
