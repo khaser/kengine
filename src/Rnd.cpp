@@ -5,10 +5,12 @@
 #include <math.h>
 
 Vec3<float> Rnd::in_sphere() {
-    float z = uniform(-1.0, 1.0);
-    float phi = uniform(0.0, 2 * M_PI);
-    float sq = sqrt(1 - z * z);
-    return {sq * cos(phi), sq * sin(phi), z};
+    while (true) {
+        Vec3<float> v = {uniform(-1.0, 1.0), uniform(-1.0, 1.0), uniform(-1.0, 1.0)};
+        if (v.len() < 1) {
+            return v.norm();
+        }
+    }
 }
 
 float Rnd::uniform(float Min, float Max) {

@@ -20,13 +20,7 @@ Box::Box(const Vec3<float> &aa, const Vec3<float> &bb) :
 Vec3<float> Box::normal(const Vec3<float>& p) const {
     Vec3<float> v = p * div_size;
     Vec3<float> av = {fabsf(v.x), fabsf(v.y), fabsf(v.z)};
-    if (av.x > av.y && av.x > av.z) {
-        return {v.x, 0, 0};
-    } else if (av.y > av.x && av.y > av.z) {
-        return {0, v.y, 0};
-    } else {
-        return {0, 0, v.z};
-    }
+    return av.maj() * v;
 }
 
 std::vector<float> Box::get_intersect_(const Ray& ray) const {

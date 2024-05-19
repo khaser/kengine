@@ -11,7 +11,7 @@ struct Ray {
     }
 
     void bump() {
-        start = start + v * 1e-6;
+        start = start + v * 1e-4;
     }
 };
 

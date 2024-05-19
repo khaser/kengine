@@ -25,7 +25,6 @@ private:
     // get sorted vector of lengths on which ray intersect geometry
     // Use ray.reveal, to get intersection cords
     virtual std::vector<float> get_intersect_(const Ray&) const = 0;
-    bool is_inside(const Ray&, float) const;
 };
 
 struct Plane : public Geometry {
