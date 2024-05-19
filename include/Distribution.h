@@ -60,8 +60,8 @@ public:
                 throw std::logic_error("zero probability density by point");
             }
             float angle_k = abs(obj_inter.normal % r.v);
-            if (angle_k <= 1e-6) {
-                angle_k = 1e-6;
+            if (angle_k <= 1e-4) {
+                angle_k = 1e-4;
             }
             res += tmp * obj_inter.t * obj_inter.t / angle_k;
         }
