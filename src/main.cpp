@@ -2,6 +2,7 @@
 
 #include "Image.h"
 #include "Scene.h"
+#include "SceneBuilder.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -12,7 +13,8 @@ int main(int argc, char* argv[]) {
     std::string scene_path(argv[1]);
     std::string output_path(argv[2]);
 
-    Scene scene = std::ifstream(scene_path);
+    std::ifstream fin(scene_path);
+    Scene scene = TrivialBuilder(fin);
     std::cerr << "Scene parsed\n";
 
     Image img = scene.render_scene();

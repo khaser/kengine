@@ -13,15 +13,15 @@
 
 #include "Object/Material.h"
 
-Vec3<float> Diffuse::sample(Ray w_in, Intersection i,
-                        const std::function<Vec3<float>(const Ray&)> &raycast) {
+Vec3<float> Diffuse::sample(Ray w_in, Intersection i, const Distribution& dist,
+                            const std::function<Vec3<float>(const Ray&)> &raycast) {
     Vec3<float> pos = w_in.reveal(i.t);
     {
         Ray r = {pos, i.normal};
         r.bump();
         pos = r.start;
     }
-    Vec3<float> w_out = dist->sample(pos, i.normal);
+    Vec3<float> w_out = dist.sample(pos, i.normal);
     Ray r_out = Ray {pos, w_out};
 
     r_out.bump();
@@ -32,7 +32,7 @@ Vec3<float> Diffuse::sample(Ray w_in, Intersection i,
         return {0, 0, 0};
     }
 
-    auto tmp = dist->pdf(pos, i.normal, w_out);
+    auto tmp = dist.pdf(pos, i.normal, w_out);
     return emission + (color / M_PI) * raycast(r_out) * (i.normal % w_out) / tmp;
 }
 
@@ -42,13 +42,13 @@ static Ray reflect(const Vec3<float> pos, const Vec3<float> d, const Vec3<float>
     return reflected;
 };
 
-Vec3<float> Metallic::sample(Ray w_in, Intersection i,
+Vec3<float> Metallic::sample(Ray w_in, Intersection i, const Distribution& dist,
                         const std::function<Vec3<float>(const Ray&)> &raycast) {
     Vec3<float> pos = w_in.reveal(i.t);
     return emission + color * raycast(reflect(pos, w_in.v, i.normal));
 }
 
-Vec3<float> Dielectric::sample(Ray w_in, Intersection i,
+Vec3<float> Dielectric::sample(Ray w_in, Intersection i, const Distribution& dist,
                         const std::function<Vec3<float>(const Ray&)> &raycast) {
     float k = (i.is_inside ? ior : 1 / ior);
 

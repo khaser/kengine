@@ -12,7 +12,7 @@ MixedDistribution::MixedDistribution(std::vector<std::shared_ptr<LightDistributi
 
 MixedDistribution::~MixedDistribution() {};
 
-vec3 MixedDistribution::sample(const vec3 &pos, const vec3 &n) {
+vec3 MixedDistribution::sample(const vec3 &pos, const vec3 &n) const {
     Rnd *rnd = Rnd::getRnd();
     if (rnd->bernoulli() && !dists.empty()) {
         return dists[rnd->uniform_int(0, dists.size())]->sample(pos, n);

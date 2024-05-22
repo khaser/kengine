@@ -13,11 +13,11 @@
 #include <iostream>
 
 struct Distribution {
-    Rnd *rnd;
+    mutable Rnd *rnd;
 
     Distribution() : rnd(Rnd::getRnd()) {}
     virtual ~Distribution() {}
-    virtual Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n) = 0;
+    virtual Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n) const = 0;
     virtual float pdf(const Vec3<float> &pos, const Vec3<float> &n, const Vec3<float> &d) const = 0;
 };
 
@@ -27,7 +27,7 @@ struct Distribution {
 struct UniformDistribution : public Distribution {
     UniformDistribution();
     ~UniformDistribution();
-    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n);
+    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n) const;
     float pdf(const Vec3<float> &pos, const Vec3<float> &n, const Vec3<float> &d) const;
 };
 
@@ -35,7 +35,7 @@ struct UniformDistribution : public Distribution {
 struct CosineDistribution : public Distribution {
     CosineDistribution();
     ~CosineDistribution();
-    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n);
+    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n) const;
     float pdf(const Vec3<float> &pos, const Vec3<float> &n, const Vec3<float> &d) const;
 };
 
@@ -46,7 +46,7 @@ public:
     LightDistribution(std::shared_ptr<Geometry> geom) : geometry(geom), Distribution() {}
     ~LightDistribution() {}
 
-    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n) {
+    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n) const {
         Vec3<float> x = geometry->position + geometry->rotation * sample_();
         return (x - pos).norm();
     }
@@ -74,7 +74,7 @@ public:
 
 private:
     // return sample from geom in local cords
-    virtual Vec3<float> sample_() = 0;
+    virtual Vec3<float> sample_() const = 0;
     // return geometry point pdf
     virtual float pdf_(const Vec3<float> &pos) const = 0;
 };
@@ -87,7 +87,7 @@ struct BoxDistribution : public LightDistribution {
 
     BoxDistribution(std::shared_ptr<Box> b);
     ~BoxDistribution();
-    Vec3<float> sample_();
+    Vec3<float> sample_() const;
     float pdf_(const Vec3<float> &) const;
 };
 
@@ -96,7 +96,7 @@ struct EllipsoidDistribution : public LightDistribution {
     std::shared_ptr<Ellipsoid> ellips;
     EllipsoidDistribution(std::shared_ptr<Ellipsoid> e);
     ~EllipsoidDistribution();
-    Vec3<float> sample_();
+    Vec3<float> sample_() const;
     float pdf_(const Vec3<float> &pos) const;
 };
 
@@ -104,7 +104,7 @@ struct TriangleDistribution : public LightDistribution {
     std::shared_ptr<Triangle> tr;
     TriangleDistribution(std::shared_ptr<Triangle> tr);
     ~TriangleDistribution();
-    Vec3<float> sample_();
+    Vec3<float> sample_() const;
     float pdf_(const Vec3<float> &pos) const;
 };
 
@@ -141,6 +141,6 @@ struct MixedDistribution : public Distribution {
 
     MixedDistribution(std::vector<std::shared_ptr<LightDistribution>> &&dists);
     ~MixedDistribution();
-    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n);
+    Vec3<float> sample(const Vec3<float> &pos, const Vec3<float> &n) const;
     float pdf(const Vec3<float> &pos, const Vec3<float> &n, const Vec3<float> &d) const;
 };

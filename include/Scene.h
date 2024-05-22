@@ -4,6 +4,7 @@
 #include <optional>
 #include <type_traits>
 
+#include "SceneBuilder.h"
 #include "Camera.h"
 #include "Object.h"
 #include "Primitives.h"
@@ -52,20 +53,16 @@ using BVH = RawBVH::BVH<T, F, Map, Merge, Geom, EarlyOut>;
 }; // namespace BVH_bounds
 
 struct Scene {
-    std::pair<uint16_t, uint16_t> dimensions;
-    Vec3<float> bg_color;
-    Vec3<float> ambient_light;
+    Setup setup;
     Camera camera;
 
     BVH_bounds::BVH bvh;
-    std::vector<Object> non_bvh_objs;
+    std::vector<Object> objs;
+    std::vector<Object>::iterator bvh_end;
 
     std::unique_ptr<MixedDistribution> light_pdf;
 
-    int ray_depth;
-    uint16_t samples;
-
-    Scene(std::ifstream is);
+    Scene(SceneBuilder&& builder);
 
     std::vector<std::vector<Vec3<float>>> render_scene();
 
@@ -79,7 +76,7 @@ private:
 
     Vec3<float> saturate(const Vec3<float> &color);
 
-    Vec3<float> raycast(const Ray& ray, int ttl) const;
+    Vec3<float> raycast(const Ray& ray, int ttl);
 
-    std::optional<std::pair<Object, Intersection>> get_intersect(const Ray& ray) const;
+    std::optional<std::pair<Object, Intersection>> get_intersect(const Ray& ray);
 };

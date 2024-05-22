@@ -15,7 +15,7 @@ BoxDistribution::BoxDistribution(std::shared_ptr<Box> b) : LightDistribution(b),
 
 BoxDistribution::~BoxDistribution() {};
 
-vec3 BoxDistribution::sample_() {
+vec3 BoxDistribution::sample_() const {
     Rnd* rnd = Rnd::getRnd();
     auto &[x, y, z] = box->size;
 

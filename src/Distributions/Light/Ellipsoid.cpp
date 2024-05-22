@@ -9,7 +9,7 @@ EllipsoidDistribution::EllipsoidDistribution(std::shared_ptr<Ellipsoid> e) : Lig
 
 EllipsoidDistribution::~EllipsoidDistribution() {};
 
-vec3 EllipsoidDistribution::sample_() {
+vec3 EllipsoidDistribution::sample_() const {
     return ellips->r * rnd->in_sphere();
 }
 

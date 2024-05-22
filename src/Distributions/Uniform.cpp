@@ -9,7 +9,7 @@ UniformDistribution::UniformDistribution() : Distribution() {}
 
 UniformDistribution::~UniformDistribution() {};
 
-vec3 UniformDistribution::sample(const vec3 &pos, const vec3 &n) {
+vec3 UniformDistribution::sample(const vec3 &pos, const vec3 &n) const {
     vec3 res = rnd->in_sphere();
     if (res % n < 0) {
         res = -res;

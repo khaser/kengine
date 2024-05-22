@@ -10,7 +10,7 @@ TriangleDistribution::TriangleDistribution(std::shared_ptr<Triangle> geom)
 
 TriangleDistribution::~TriangleDistribution() {};
 
-vec3 TriangleDistribution::sample_() {
+vec3 TriangleDistribution::sample_() const {
     auto rnd = Rnd::getRnd();
     auto [x, y] = std::make_tuple(rnd->uniform(0, 1), rnd->uniform(0, 1));
     if (x + y > 1) {

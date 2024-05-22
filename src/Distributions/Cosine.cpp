@@ -9,7 +9,7 @@ CosineDistribution::CosineDistribution() : Distribution() {}
 
 CosineDistribution::~CosineDistribution() {};
 
-vec3 CosineDistribution::sample(const vec3 &pos, const vec3 &n) {
+vec3 CosineDistribution::sample(const vec3 &pos, const vec3 &n) const {
     vec3 res = rnd->in_sphere();
     return (res + n).norm();
 }
