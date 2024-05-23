@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
 
     SceneBuilder builder;
     std::ifstream fin(scene_path);
-    Setup setup = {6, uint16_t(std::atoi(argv[4])), Vec3<float>(), Vec3<float>(),
+    Setup setup = {6, uint16_t(std::atoi(argv[4]) / 2), Vec3<float>(), Vec3<float>(),
                     {uint16_t(std::atoi(argv[2])), uint16_t(std::atoi(argv[3]))}};
     builder = GltfBuilder(fin, scene_path.parent_path(), std::move(setup));
     Scene scene(std::move(builder));

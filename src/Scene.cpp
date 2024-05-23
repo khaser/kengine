@@ -59,9 +59,9 @@ std::vector<std::vector<Vec3<float>>> Scene::render_scene() {
             }
             output[y][x] = postprocess(pixel / setup.samples);
         }
-        /* std::cerr << samples_processed << ' ' << samples_total << std::endl; */
-        /* std::cerr << "Generated " << std::fixed << std::setprecision(4) << 100 * 1.0 * samples_processed / samples_total << "% of samples\n"; */
-        /* std::cerr << "Spent time: " << 0.25 * (clock() - start_clock) / CLOCKS_PER_SEC << std::endl; */
+        std::cerr << samples_processed << ' ' << samples_total << std::endl;
+        std::cerr << "Generated " << std::fixed << std::setprecision(4) << 100 * 1.0 * samples_processed / samples_total << "% of samples\n";
+        std::cerr << "Spent time: " << 0.25 * (clock() - start_clock) / CLOCKS_PER_SEC << std::endl;
     }
     return output;
 }
