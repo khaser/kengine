@@ -122,6 +122,32 @@ public:
             buffers.emplace_back(filename, std::ios_base::binary);
         }
 
+        std::vector<std::shared_ptr<Material>> materials;
+        for (const auto &i : data["materials"]) {
+            Quaternion color = read_quat(i["pbrMetallicRoughness"], "baseColorFactor", Quaternion{});
+            float emissiveStrength;
+            try {
+                emissiveStrength = i.at("extensions").at("KHR_materials_emissive_strength").at("emissiveStrength");
+            } catch (...) {
+                emissiveStrength = 1;
+            }
+            Vec3<float> emission = read_vec(i, "emissiveFactor", Vec3<float>()) * emissiveStrength;
+            if (color.w < 1) {
+                auto mat = std::make_shared<Dielectric> ();
+                mat->ior = 1.5;
+                materials.push_back(mat);
+            } else if (i["pbrMetallicRoughness"].contains("metallicFactor") && i["pbrMetallicRoughness"]["metallicFactor"] > 0) {
+                auto mat = std::make_shared<Metallic> ();
+                mat->emission = emission;
+                materials.push_back(mat);
+            } else {
+                auto mat = std::make_shared<Diffuse> ();
+                mat->emission = emission;
+                materials.push_back(mat);
+            }
+            materials.back()->color = color.v;
+        }
+
         for (const auto &i : data["nodes"]) {
             if (i.contains("camera")) {
                 int camera_id = i["camera"];
@@ -131,9 +157,8 @@ public:
                 camera.right = rotation * Vec3<float>(1, 0, 0);
                 camera.up = rotation * Vec3<float>(0, 1, 0);
                 auto &perspective = data["cameras"][camera_id]["perspective"];
-                camera.fov_x = perspective["yfov"];
-                camera.calc_fov_y(setup.dimensions.first, setup.dimensions.second);
-                std::swap(camera.fov_x, camera.fov_y);
+                camera.fov_y = perspective["yfov"];
+                camera.calc_fov_x(setup.dimensions.first, setup.dimensions.second);
             } else if (i.contains("mesh")) {
                 Vec3<float> scale = read_vec(i, "scale", Vec3<float>(1));
                 Vec3<float> position = read_vec(i, "translation", Vec3<float>(0));
@@ -163,7 +188,8 @@ public:
                             fin.read(reinterpret_cast<char*>(&x), sizeof(x));
                             fin.read(reinterpret_cast<char*>(&y), sizeof(y));
                             fin.read(reinterpret_cast<char*>(&z), sizeof(z));
-                            v_positions.emplace_back(x, y, z);
+                            Vec3<float> vec = {x, y, z};
+                            v_positions.emplace_back(position + rotation * scale * vec);
                         }
                     }
 
@@ -187,7 +213,7 @@ public:
                     }
                     for (int i = 0; i < v_indices.size(); i += 3) {
                         objs.push_back({
-                            std::make_shared<Diffuse> (),
+                            materials[static_cast<size_t>(primitive["material"])],
                             std::make_shared<Triangle> (Mat3<float>{
                                 v_positions[v_indices[i]],
                                 v_positions[v_indices[i+1]],

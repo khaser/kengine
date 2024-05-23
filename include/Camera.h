@@ -17,6 +17,10 @@ struct Camera {
         fov_y = 2 * atanf(h * tanf(fov_x/2) / w);
     }
 
+    void calc_fov_x(int w, int h) {
+        fov_x = 2 * atanf(w * tanf(fov_y/2) / h);
+    }
+
     // x, y in [-1, 1]
     Ray raycast(float x, float y) {
         Vec3<float> v = {x * tanf(fov_x / 2), y * tanf(fov_y / 2), 1};
