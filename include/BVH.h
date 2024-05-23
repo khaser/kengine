@@ -119,7 +119,7 @@ private:
     std::vector<Node> tree;
     ssize_t root_node;
     F ini;
-    static const size_t term_size = 8;
+    static const size_t term_size = 2;
 };
 
 }
