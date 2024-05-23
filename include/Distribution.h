@@ -54,18 +54,17 @@ public:
     // angle pdf
     float pdf(const Ray &r) const {
         float res = 0;
-        for (Intersection &obj_inter : geometry->get_intersect(r)) {
-            float tmp = pdf_(-geometry->rotation * (r.reveal(obj_inter.t) - geometry->position));
-            if (tmp <= 1e-5) {
-                throw std::logic_error("zero probability density by point");
-            }
-            float angle_k = abs(obj_inter.normal % r.v);
-            if (angle_k <= 1e-4) {
-                angle_k = 1e-4;
-            }
-            res += tmp * obj_inter.t * obj_inter.t / angle_k;
+        Intersection obj_inter = geometry->get_intersect(r);
+        if (obj_inter.t < 0) return 0;
+        float tmp = pdf_(-geometry->rotation * (r.reveal(obj_inter.t) - geometry->position));
+        if (tmp <= 1e-5) {
+            throw std::logic_error("zero probability density by point");
         }
-        return res;
+        float angle_k = abs(obj_inter.normal % r.v);
+        if (angle_k <= 1e-4) {
+            angle_k = 1e-4;
+        }
+        return tmp * obj_inter.t * obj_inter.t / angle_k;
     }
 
     float pdf(const Vec3<float> &pos, const Vec3<float> &n, const Vec3<float> &d) const {
@@ -79,26 +78,6 @@ private:
     virtual float pdf_(const Vec3<float> &pos) const = 0;
 };
 
-
-struct BoxDistribution : public LightDistribution {
-    std::shared_ptr<Box> box;
-    Vec3<float> faces;
-    float faces_square;
-
-    BoxDistribution(std::shared_ptr<Box> b);
-    ~BoxDistribution();
-    Vec3<float> sample_() const;
-    float pdf_(const Vec3<float> &) const;
-};
-
-
-struct EllipsoidDistribution : public LightDistribution {
-    std::shared_ptr<Ellipsoid> ellips;
-    EllipsoidDistribution(std::shared_ptr<Ellipsoid> e);
-    ~EllipsoidDistribution();
-    Vec3<float> sample_() const;
-    float pdf_(const Vec3<float> &pos) const;
-};
 
 struct TriangleDistribution : public LightDistribution {
     std::shared_ptr<Triangle> tr;

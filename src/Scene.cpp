@@ -25,22 +25,14 @@ Scene::Scene(SceneBuilder&& builder) : objs(std::move(builder.objs)), setup(std:
 
     for (auto& i : objs) {
         if (i.material->emission.len() <= 1e-5) continue;
-        if (auto t = std::dynamic_pointer_cast<Box>(i.geometry)) {
-            dists.push_back(std::make_unique<BoxDistribution>(t));
-        } else if (auto t = std::dynamic_pointer_cast<Ellipsoid>(i.geometry)) {
-            dists.push_back(std::make_unique<EllipsoidDistribution>(t));
-        } else if (auto t = std::dynamic_pointer_cast<Triangle>(i.geometry)) {
+        if (auto t = std::dynamic_pointer_cast<Triangle>(i.geometry)) {
             dists.push_back(std::make_unique<TriangleDistribution>(t));
         }
     }
 
     light_pdf = std::make_unique<MixedDistribution>(std::move(dists));
 
-    bvh_end = std::partition(objs.begin(), objs.end(), [] (const T& obj) -> bool {
-        return dynamic_pointer_cast<Plane>(obj.geometry) == 0;
-    });
-
-    bvh = BVH(std::nullopt, objs.begin(), bvh_end);
+    bvh = BVH(std::nullopt, objs.begin(), objs.end());
 }
 
 
@@ -67,9 +59,9 @@ std::vector<std::vector<Vec3<float>>> Scene::render_scene() {
             }
             output[y][x] = postprocess(pixel / setup.samples);
         }
-        std::cerr << samples_processed << ' ' << samples_total << std::endl;
-        std::cerr << "Generated " << std::fixed << std::setprecision(4) << 100 * 1.0 * samples_processed / samples_total << "% of samples\n";
-        std::cerr << "Spent time: " << 0.25 * (clock() - start_clock) / CLOCKS_PER_SEC << std::endl;
+        /* std::cerr << samples_processed << ' ' << samples_total << std::endl; */
+        /* std::cerr << "Generated " << std::fixed << std::setprecision(4) << 100 * 1.0 * samples_processed / samples_total << "% of samples\n"; */
+        /* std::cerr << "Spent time: " << 0.25 * (clock() - start_clock) / CLOCKS_PER_SEC << std::endl; */
     }
     return output;
 }
@@ -111,8 +103,5 @@ Vec3<float> Scene::raycast(const Ray& ray, int ttl) {
 }
 
 std::optional<std::pair<Object, Intersection>> Scene::get_intersect(const Ray& ray) {
-    std::vector<F> node_inters;
-    std::transform(bvh_end, objs.end(), std::back_inserter(node_inters), Map(ray));
-    F non_bvh_inter = std::accumulate(node_inters.begin(), node_inters.end(), static_cast<F>(std::nullopt), Merge());
-    return Merge() (non_bvh_inter, bvh.get_intersect(ray, true));
+    return bvh.get_intersect(ray, true);
 }

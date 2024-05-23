@@ -16,7 +16,7 @@ Vec3<float> Triangle::normal(const Vec3<float>& p) const {
     return norm;
 }
 
-std::vector<float> Triangle::get_intersect_(const Ray& ray) const {
+float Triangle::get_intersect_(const Ray& ray) const {
     Mat3<float> mat;
     if ((u ^ v) % -ray.v > 0) {
         mat = {u, v, -ray.v};
@@ -27,12 +27,12 @@ std::vector<float> Triangle::get_intersect_(const Ray& ray) const {
     if (solution.has_value()) {
         Vec3<float> inter = solution.value();
         if (inter.x >= 0 && inter.y >= 0 && inter.x + inter.y <= 1 && inter.z > 0) {
-            return {inter.z};
+            return inter.z;
         } else {
-            return {};
+            return -1e30;
         }
     } else {
-        return {};
+        return -1e30;
     }
 };
 

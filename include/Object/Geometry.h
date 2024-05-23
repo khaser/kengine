@@ -18,47 +18,13 @@ struct Geometry {
     Geometry(const Vec3<float> &pos, const Quaternion &r) : position(pos), rotation(r) {};
     virtual ~Geometry() {};
 
-    std::vector<Intersection> get_intersect(Ray ray) const;
+    Intersection get_intersect(Ray ray) const;
     virtual Vec3<float> normal(const Vec3<float>& p) const = 0;
     virtual AABB get_aabb() const = 0;
 private:
     // get sorted vector of lengths on which ray intersect geometry
     // Use ray.reveal, to get intersection cords
-    virtual std::vector<float> get_intersect_(const Ray&) const = 0;
-};
-
-struct Plane : public Geometry {
-    Vec3<float> norm;
-    Plane(const Vec3<float>&);
-    virtual ~Plane() {};
-    Vec3<float> normal(const Vec3<float>&) const;
-    virtual AABB get_aabb() const;
-private:
-    std::vector<float> get_intersect_(const Ray&) const;
-};
-
-struct Ellipsoid : public Geometry {
-    Vec3<float> r;
-    Vec3<float> div_r2_cached;
-    Ellipsoid(const Vec3<float>&);
-    virtual ~Ellipsoid() {};
-    Vec3<float> normal(const Vec3<float>&) const;
-    virtual AABB get_aabb() const;
-private:
-    std::vector<float> get_intersect_(const Ray&) const;
-};
-
-struct Box : public Geometry {
-    Vec3<float> size;
-    Vec3<float> div_size;
-    Box(const Vec3<float>&);
-    Box(const Vec3<float> &size, const Vec3<float> &position, const Quaternion &rotation);
-    Box(const Vec3<float> &aa, const Vec3<float> &bb);
-    virtual AABB get_aabb() const;
-    virtual ~Box() {};
-    Vec3<float> normal(const Vec3<float>&) const;
-private:
-    std::vector<float> get_intersect_(const Ray&) const;
+    virtual float get_intersect_(const Ray&) const = 0;
 };
 
 struct Triangle : public Geometry {
@@ -70,5 +36,5 @@ struct Triangle : public Geometry {
     Vec3<float> normal(const Vec3<float>&) const;
     virtual AABB get_aabb() const;
 private:
-    std::vector<float> get_intersect_(const Ray&) const;
+    float get_intersect_(const Ray&) const;
 };

@@ -1,2 +1,2 @@
 #/usr/bin/env bash
-time ./build/kengine gltf $@
+time ./build/kengine $@

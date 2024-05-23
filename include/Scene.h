@@ -58,7 +58,6 @@ struct Scene {
 
     BVH_bounds::BVH bvh;
     std::vector<Object> objs;
-    std::vector<Object>::iterator bvh_end;
 
     std::unique_ptr<MixedDistribution> light_pdf;
 
