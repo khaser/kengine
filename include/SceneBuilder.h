@@ -136,7 +136,7 @@ public:
                 auto mat = std::make_shared<Dielectric> ();
                 mat->ior = 1.5;
                 materials.push_back(mat);
-            } else if (i["pbrMetallicRoughness"].contains("metallicFactor") && i["pbrMetallicRoughness"]["metallicFactor"] > 0) {
+            } else if (!i["pbrMetallicRoughness"].contains("metallicFactor") || i["pbrMetallicRoughness"]["metallicFactor"] > 0) {
                 auto mat = std::make_shared<Metallic> ();
                 mat->emission = emission;
                 materials.push_back(mat);
@@ -183,13 +183,25 @@ public:
                         size_t offset = position_buff["byteOffset"];
                         size_t len = position_buff["byteLength"];
                         fin.seekg(offset, std::ios_base::beg);
-                        for (int i = 0; i < len; i += 3 * sizeof(float)) {
+                        for (int _ = 0; _ < len; _ += 3 * sizeof(float)) {
                             float x, y, z;
                             fin.read(reinterpret_cast<char*>(&x), sizeof(x));
                             fin.read(reinterpret_cast<char*>(&y), sizeof(y));
                             fin.read(reinterpret_cast<char*>(&z), sizeof(z));
                             Vec3<float> vec = {x, y, z};
-                            v_positions.emplace_back(translation + rotation * (scale * vec));
+                            if (i.contains("matrix")) {
+                                Quaternion x, y, z, w;
+                                int j = 0;
+                                for (auto q : {&x, &y, &z, &w}) {
+                                    q->v.x = i["matrix"][j++];
+                                    q->v.y = i["matrix"][j++];
+                                    q->v.z = i["matrix"][j++];
+                                    q->w = i["matrix"][j++];
+                                }
+                                v_positions.push_back((Mat4{x, y, z, w} * Quaternion{vec, 1.f}).v);
+                            } else {
+                                v_positions.emplace_back(translation + rotation * (scale * vec));
+                            }
                         }
                     }
 

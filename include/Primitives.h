@@ -5,3 +5,4 @@
 #include "Primitives/Intersection.h"
 #include "Primitives/Quaternion.h"
 #include "Primitives/Mat3.h"
+#include "Primitives/Mat4.h"

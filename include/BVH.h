@@ -100,7 +100,11 @@ private:
             pivot = std::partition(begin, end, [&sel, &node_aabb] (const T &obj) {
                 return fabs(((Geom() (obj))->get_aabb().position() - node_aabb.position()) % sel) < 1e-5;
             });
-            assert(pivot != begin && pivot != end);
+
+            if (pivot == begin || pivot == end) {
+                tree.push_back({begin - objs.begin(), end - begin, -1, -1, node_aabb});
+                return tree.size() - 1;
+            }
         }
 
         /* std::cerr << "Create split node: " << pivot - begin << " in left child, and " << end - pivot << " in right child\n"; */
