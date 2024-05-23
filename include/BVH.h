@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <optional>
+#include <cassert>
 
 struct Node {
     ssize_t start;
@@ -29,6 +30,17 @@ public:
     BVH(F ini, objsIt begin, objsIt end) : ini(ini), objs(begin, end) {
         tree.reserve(objs.end() - objs.begin()); // prevent reallocations to make dirty hacks in build work
         root_node = build_bvh(objs.begin(), objs.end());
+        std::cerr << "BVH statistics:\n";
+        std::cerr << "Total nodes: " << tree.size() << '\n';
+        auto it = std::max_element(tree.begin(), tree.end(),
+                    [&] (const Node &a, const Node& b) {
+                        return a.len < b.len;
+                  });
+        if (it != tree.end()) {
+            std::cerr << "Largest node size: " << it->len << '\n';
+        } else {
+            std::cerr << "Empty tree!!\n";
+        }
     }
 
     F get_intersect(const Ray& ray, bool early_out) const {
@@ -83,8 +95,12 @@ private:
             return (Geom() (obj))->get_aabb().position() % sel > node_aabb.position() % sel;
         });
         if (pivot == begin || pivot == end) {
-            tree.push_back({begin - objs.begin(), end - begin, -1, -1, node_aabb});
-            return tree.size() - 1;
+            // Case when exists one object, which AABB contains other objs
+            // Put huge object into left node, and continue build BVH for others in right node
+            pivot = std::partition(begin, end, [&sel, &node_aabb] (const T &obj) {
+                return fabs(((Geom() (obj))->get_aabb().position() - node_aabb.position()) % sel) < 1e-5;
+            });
+            assert(pivot != begin && pivot != end);
         }
 
         /* std::cerr << "Create split node: " << pivot - begin << " in left child, and " << end - pivot << " in right child\n"; */

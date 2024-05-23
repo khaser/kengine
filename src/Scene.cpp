@@ -24,9 +24,7 @@ Scene::Scene(SceneBuilder&& builder) : objs(std::move(builder.objs)), setup(std:
     std::vector<std::shared_ptr<LightDistribution>> dists;
 
     for (auto& i : objs) {
-        if (!dynamic_pointer_cast<Diffuse>(objs.back().material)) {
-            continue;
-        }
+        if (i.material->emission.len() <= 1e-5) continue;
         if (auto t = std::dynamic_pointer_cast<Box>(i.geometry)) {
             dists.push_back(std::make_unique<BoxDistribution>(t));
         } else if (auto t = std::dynamic_pointer_cast<Ellipsoid>(i.geometry)) {

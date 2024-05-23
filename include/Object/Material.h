@@ -10,18 +10,17 @@
 
 struct Material {
     Vec3<float> color;
+    Vec3<float> emission;
     virtual Vec3<float> sample(Ray w_in, Intersection i, const Distribution& dist,
                                     const std::function<Vec3<float>(const Ray&)> &raycast) = 0;
 };
 
 struct Diffuse : public Material {
-    Vec3<float> emission;
     Vec3<float> sample(Ray w_in, Intersection i, const Distribution& dist,
                             const std::function<Vec3<float>(const Ray&)> &raycast);
 };
 
 struct Metallic : public Material {
-    Vec3<float> emission;
     Vec3<float> sample(Ray w_in, Intersection i, const Distribution& dist,
                             const std::function<Vec3<float>(const Ray&)> &raycast);
 };
