@@ -160,10 +160,10 @@ public:
                 camera.fov_y = perspective["yfov"];
                 camera.calc_fov_x(setup.dimensions.first, setup.dimensions.second);
             } else if (i.contains("mesh")) {
-                Vec3<float> scale = read_vec(i, "scale", Vec3<float>(1));
-                Vec3<float> position = read_vec(i, "translation", Vec3<float>(0));
-                Quaternion rotation = read_quat(i, "rotation", Quaternion{});
                 size_t mesh_id = i["mesh"];
+                Vec3<float> scale = read_vec(i, "scale", Vec3<float>(1));
+                Vec3<float> translation = read_vec(i, "translation", Vec3<float>(0));
+                Quaternion rotation = read_quat(i, "rotation", Quaternion{});
                 const auto& primitives = data["meshes"][mesh_id]["primitives"];
                 for (const auto &primitive : primitives) {
                     // Now parser support only default primitive mode: TRIANGLES,
@@ -189,7 +189,7 @@ public:
                             fin.read(reinterpret_cast<char*>(&y), sizeof(y));
                             fin.read(reinterpret_cast<char*>(&z), sizeof(z));
                             Vec3<float> vec = {x, y, z};
-                            v_positions.emplace_back(position + rotation * scale * vec);
+                            v_positions.emplace_back(translation + rotation * (scale * vec));
                         }
                     }
 
