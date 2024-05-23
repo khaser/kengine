@@ -51,6 +51,9 @@ std::vector<std::vector<Vec3<float>>> Scene::render_scene() {
     std::atomic_size_t samples_processed = 0;
     size_t samples_total = setup.dimensions.first * setup.dimensions.second * setup.samples;
     auto start_clock = clock();
+    std::cerr << "Start rendering scene with following setup:\n";
+    std::cerr << "Output resolution: " << setup.dimensions.first << 'x' << setup.dimensions.second << std::endl;
+    std::cerr << "Samples per pixel: " << setup.samples << std::endl;
     for (uint16_t x = 0; x < setup.dimensions.first; ++x) {
 #pragma omp parallel for schedule(dynamic)
         for (uint16_t y = 0; y < setup.dimensions.second; ++y) {
